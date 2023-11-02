@@ -21,7 +21,9 @@ import numpy as np
 import jax.numpy as jnp
 from kernel import RocketKernel
 import time
-from sklearn.linear_model import RidgeClassifierCV
+from sklearn.linear_model import RidgeCV
+from sklearn.pipeline import make_pipeline
+from sklearn.preprocessing import StandardScaler
 
 # Load the dataset
 
@@ -72,7 +74,7 @@ for i in range(num_runs):
 
     # Training
     time_start = time.perf_counter()
-    classifier = RidgeClassifierCV(alphas = np.logspace(-3, 3, 10), normalize = True)
+    classifier = make_pipeline(StandardScaler(with_mean=False), RidgeCV())
     classifier.fit(training_kernel.feature_map, y_train)
     time_end = time.perf_counter()
     timings[2,i] = time_end-time_start
@@ -86,7 +88,7 @@ for i in range(num_runs):
     time_end = time.perf_counter()
     timings[3,i] = time_end-time_start
     print('Completed test phase')
-    print(f'Elapsed time during training: {timings[3,i]}')
+    print(f'Elapsed time during testing: {timings[3,i]}')
 
     print(f'End of run no: {i}')
     print(f'Score of the run: {results[i]}')
