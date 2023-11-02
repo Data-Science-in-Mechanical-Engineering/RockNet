@@ -1,5 +1,5 @@
 """
-This file implements random convolutional kernels for ROCKET.
+This file implements random convolutional kernels for ROCKET. -and MiniRocket soon
 """
 
 import jax.numpy as jnp
@@ -12,6 +12,7 @@ class RocketKernel():
                  input_length,
                  num_kernels=1000,
                  rkey=jax.random.PRNGKey(seed=11),
+                 method_selection='rocket'
                  ):
         """
         Generate kernels.
@@ -19,39 +20,49 @@ class RocketKernel():
         rkey: random state for jax.
         """
         super().__init__()
-
         self.rkey = rkey
-        self.candidate_lengths = jnp.array((7,9,11))
         self.num_kernels = num_kernels
-
-        self.kernel_lengths = jax.random.choice(key=self.rkey, a=self.candidate_lengths, shape=(self.num_kernels,1))
+        self.ppv = jnp.zeros(shape=(self.num_kernels,))
         self.weights = jnp.zeros(shape=(self.kernel_lengths.sum(),))
         self.biases = jnp.zeros(shape=(self.num_kernels,))
         self.dilations = jnp.zeros(shape=(self.num_kernels,))
         self.paddings = jnp.zeros(shape=(self.num_kernels,))
 
-        self.ppv = jnp.zeros(shape=(self.num_kernels,))
-        self.max = jnp.zeros(shape=(self.num_kernels,))
+        if method_selection == 'rocket':
+            self.candidate_lengths = jnp.array((7,9,11))
+            self.kernel_lengths = jax.random.choice(key=self.rkey, a=self.candidate_lengths, shape=(self.num_kernels,1))
+            self.max = jnp.zeros(shape=(self.num_kernels,))
+
+        elif method_selection == 'minirocket':
+            self.candidate_lengths = jnp.array([9])
+            self.kernel_lengths = jnp.repeat(self.candidate_lengths, self.num_kernels)
+
+        else:
+            print('Invalid Method! Killing process')
+            exit()
 
         start_idx = 0
 
         for i in range (num_kernels):
 
-            _length = self.kernel_lengths[i].squeeze()
-            _weights = jax.random.normal(key=self.rkey, shape=(_length,))
+            if method_selection == 'rocket':
+                _length = self.kernel_lengths[i].squeeze()
+                _weights = jax.random.normal(key=self.rkey, shape=(_length,))
 
-            end_idx = start_idx + _length
+                end_idx = start_idx + _length
 
-            self.weights = self.weights.at[start_idx:end_idx].set(_weights - _weights.mean())
+                self.weights = self.weights.at[start_idx:end_idx].set(_weights - _weights.mean())
 
-            self.biases = self.biases.at[i].set(jax.random.uniform(key=self.rkey, minval=-1, maxval=1))
+                self.biases = self.biases.at[i].set(jax.random.uniform(key=self.rkey, minval=-1, maxval=1))
 
-            dil = 2 ** jax.random.uniform(key=self.rkey, minval=0, maxval=jnp.log2((input_length - 1) / (_length - 1)))
-            self.dilations = self.dilations.at[i].set(jnp.int32(dil))
+                dil = 2 ** jax.random.uniform(key=self.rkey, minval=0, maxval=jnp.log2((input_length - 1) / (_length - 1)))
+                self.dilations = self.dilations.at[i].set(jnp.int32(dil))
 
-            if jax.random.bernoulli(key=self.rkey, p=0.5):
-                self.paddings = self.paddings.at[i].set((_length-1)*self.dilations[i] // 2)
+                if jax.random.bernoulli(key=self.rkey, p=0.5):
+                    self.paddings = self.paddings.at[i].set((_length-1)*self.dilations[i] // 2)
 
+            elif method_selection == 'minirocket':
+                pass
 
             start_idx = end_idx
 
