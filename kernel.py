@@ -55,7 +55,10 @@ class RocketKernel():
 
             start_idx = end_idx
 
-    def apply_kernels(self, X, weights, kernel_length, bias, dilation, padding):
+
+# Applies single kernel to the input.
+
+    def apply_single_kernel(self, X, weights, kernel_length, bias, dilation, padding):
 
         input_length = len(X)
         output_length = input_length + 2 * padding - dilation * (kernel_length - 1)
@@ -111,7 +114,7 @@ class RocketKernel():
                 Call the apply kernels func to fill up the feature map.
                 """
 
-                self.feature_map = self.feature_map.at[ex_idx, a2:b2].set(self.apply_kernels(X[ex_idx], self.weights[a1:b1],
+                self.feature_map = self.feature_map.at[ex_idx, a2:b2].set(self.apply_single_kernel(X[ex_idx], self.weights[a1:b1],
                                                                       self.kernel_lengths[kernel_idx].squeeze(), self.biases[kernel_idx],
                                                                       self.dilations[kernel_idx], self.paddings[kernel_idx]))
 
@@ -120,14 +123,11 @@ class RocketKernel():
 
 
 
-"""
-Dummy Input
-
+# Dummy Input
+'''''''''
 new = RocketKernel(input_length=10)
 dummy_input = jax.random.uniform(shape=(10,10), key=jax.random.PRNGKey(seed=123))
 new(X=dummy_input)
-print(new.feature_map[:10, :6])
+print(new.feature_map[:10, :30])
 print(new.feature_map.shape)
-
-"""
-
+'''
