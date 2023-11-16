@@ -4,9 +4,21 @@ This file implements random convolutional kernels for ROCKET. -and MiniRocket so
 
 import jax.numpy as jnp
 import jax
+import equinox as eqx
 from jax import jit
 
-class RocketKernel():
+class RocketKernel(eqx.Module):
+    rkey: jax.random.PRNGKey(seed=11)
+    num_kernels : jnp.int32
+    ppv : jax.Array
+    biases : jax.Array
+    dilations : jax.Array
+    paddings : jax.Array
+    candidate_lengths : jax.Array
+    kernel_lengths : jax.Array
+    weights : jax.Array
+    max : jax.Array
+    feature_map : jax.Array
 
     def __init__(self,
                  input_length,
@@ -32,12 +44,13 @@ class RocketKernel():
             self.kernel_lengths = jax.random.choice(key=self.rkey, a=self.candidate_lengths, shape=(self.num_kernels,))
             self.weights = jnp.zeros(shape=(self.kernel_lengths.sum(),))
             self.max = jnp.zeros(shape=(self.num_kernels,))
+            self.feature_map = jnp.zeros(shape=(input_length,self.num_kernels*2))
 
         elif method_selection == 'minirocket':
             self.candidate_lengths = jnp.array([9])
             self.kernel_lengths = jnp.repeat(self.candidate_lengths, self.num_kernels)
             self.weights = jnp.zeros(shape=(self.kernel_lengths.sum(),))
-
+            self.feature_map = jnp.zeros(shape=self.num_kernels,)
 
         else:
             print('Invalid Method! Killing process')
@@ -67,13 +80,15 @@ class RocketKernel():
                 _alpha = -1
                 _beta = 2
 
+                # weights contain -1, 2 in different positions such that kernel sum == 0, implement WIP
+                # other stuff depend on convolution output with input X
                 pass
 
             start_idx = end_idx
 
 
 # Applies single kernel to the input.
-
+    #@jit(static_argnums=['ending_index'])
     def apply_single_kernel(self, X, weights, kernel_length, bias, dilation, padding):
 
         input_length = len(X)
@@ -114,7 +129,8 @@ class RocketKernel():
         """
 
         num_examples, _ = X.shape
-        self.feature_map = jnp.zeros(shape=(num_examples, self.num_kernels * 2))
+        #self.feature_map = jnp.zeros(shape=(num_examples, self.num_kernels * 2))
+
 
         for ex_idx in range(num_examples):
 
@@ -129,8 +145,9 @@ class RocketKernel():
                 """
                 Call the apply kernels func to fill up the feature map.
                 """
+                jit_apply_kernels = jax.jit(fun=self.apply_single_kernel)
 
-                self.feature_map = self.feature_map.at[ex_idx, a2:b2].set(self.apply_single_kernel(X[ex_idx], self.weights[a1:b1],
+                self.feature_map = self.feature_map.at[ex_idx, a2:b2].set(jit_apply_kernels(X[ex_idx], self.weights[a1:b1],
                                                                       self.kernel_lengths[kernel_idx], self.biases[kernel_idx],
                                                                       self.dilations[kernel_idx], self.paddings[kernel_idx]))
 
