@@ -55,7 +55,7 @@ for i in range(num_runs):
     time_start = time.perf_counter()
     inp_length = X_train.shape[-1]
     training_kernel = RocketKernel(input_length=inp_length, num_kernels=20, rkey=jax.random.PRNGKey(i))
-    training_kernel(X=X_train)
+    train_features = training_kernel(X=X_train)
     time_end = time.perf_counter()
     timings[0,i] = time_end - time_start
 
@@ -66,7 +66,7 @@ for i in range(num_runs):
     time_start = time.perf_counter()
     test_inp_length = X_test.shape[-1]
     testing_kernel = RocketKernel(input_length=test_inp_length, num_kernels=20, rkey=jax.random.PRNGKey(i))
-    testing_kernel(X=X_test)
+    test_features = testing_kernel(X=X_test)
     time_end = time.perf_counter()
     timings[1, i] = time_end-time_start
 
@@ -76,7 +76,7 @@ for i in range(num_runs):
     # Training
     time_start = time.perf_counter()
     classifier = RidgeClassifierCV(alphas = np.logspace(-3, 3, 10), normalize = True)
-    classifier.fit(training_kernel.feature_map, y_train)
+    classifier.fit(train_features, y_train)
     time_end = time.perf_counter()
     timings[2,i] = time_end-time_start
 
@@ -85,7 +85,7 @@ for i in range(num_runs):
 
     # Test
     time_start = time.perf_counter()
-    results[i] = classifier.score(testing_kernel.feature_map, y_test)
+    results[i] = classifier.score(test_features, y_test)
     time_end = time.perf_counter()
     timings[3,i] = time_end-time_start
     print('Completed test phase')

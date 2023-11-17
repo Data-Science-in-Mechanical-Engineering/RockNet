@@ -7,6 +7,8 @@ import jax
 import equinox as eqx
 from jax import jit
 from functools import partial
+from typing import Any
+
 
 class RocketKernel(eqx.Module):
     rkey: jax.random.PRNGKey(seed=11)
@@ -19,7 +21,7 @@ class RocketKernel(eqx.Module):
     kernel_lengths : jax.Array
     weights : jax.Array
     max : jax.Array
-    feature_map : jax.Array
+#    feature_map : Any
 
     def __init__(self,
                  input_length,
@@ -45,13 +47,13 @@ class RocketKernel(eqx.Module):
             self.kernel_lengths = jax.random.choice(key=self.rkey, a=self.candidate_lengths, shape=(self.num_kernels,))
             self.weights = jnp.zeros(shape=(self.kernel_lengths.sum(),))
             self.max = jnp.zeros(shape=(self.num_kernels,))
-            self.feature_map = jnp.zeros(shape=(input_length,self.num_kernels*2))
+#            self.feature_map = jnp.zeros(shape=(input_length,self.num_kernels*2))
 
         elif method_selection == 'minirocket':
             self.candidate_lengths = jnp.array([9])
             self.kernel_lengths = jnp.repeat(self.candidate_lengths, self.num_kernels)
             self.weights = jnp.zeros(shape=(self.kernel_lengths.sum(),))
-            self.feature_map = jnp.zeros(shape=self.num_kernels,)
+#            self.feature_map = jnp.zeros(shape=self.num_kernels,)
 
         else:
             print('Invalid Method! Killing process')
@@ -89,10 +91,17 @@ class RocketKernel(eqx.Module):
 
 
 # Applies single kernel to the input.
-    @partial(jit, static_argnums=(1,2,3,4,5,6)
-    def apply_single_kernel(self, X, weights, kernel_length, bias, dilation, padding):
-
-        input_length = len(X)
+    @partial(jit, static_argnums=(1,2,3,4,5,6))
+#   def apply_single_kernel(self, X_tuple, w_begin_idx, w_end_idx, kernel_idx):
+    def apply_single_kernel(self, X_tuple, kernel_length, bias, dilation, padding, weights):
+        """
+        kernel_length = self.kernel_lengths[kernel_idx]
+        bias = self.biases[kernel_idx]
+        dilation = self.dilations[kernel_idx]
+        padding = self.dilations[kernel_idx]
+        weights = self.weights[w_begin_idx:w_end_idx]
+        """
+        input_length = len(X_tuple)
         output_length = input_length + 2 * padding - dilation * (kernel_length - 1)
         _ppv = 0
         _max = -jnp.inf
@@ -107,7 +116,7 @@ class RocketKernel(eqx.Module):
             for j in range(kernel_length):  # for each kernel do the sum
 
                 if index > -1 and index < input_length:
-                    _sum = _sum + weights[j] * X[index]
+                    _sum = _sum + weights[j] * X_tuple[index]
 
                 index = index + dilation
 
@@ -126,35 +135,40 @@ class RocketKernel(eqx.Module):
         """
         Apply all kernels to the input.
         X is the input, which contains the time series for all examples.
-        _X is the generated feature map containing ppv and max values.
         """
 
         num_examples, _ = X.shape
-        #self.feature_map = jnp.zeros(shape=(num_examples, self.num_kernels * 2))
-
+        features = jnp.empty(shape=(num_examples,self.num_kernels*2))
 
         for ex_idx in range(num_examples):
 
             a1 = 0
             a2 = 0
 
+# jit expects hashable arguments, therefore convert the input to a tuple and pass like that
+            X_tuple = tuple(map(float, X[ex_idx]))
             for kernel_idx in range(self.num_kernels):
 
-                b1 = a1 + self.kernel_lengths[kernel_idx]
+                b1 = a1 + int(self.kernel_lengths[kernel_idx])
                 b2 = a2 + 2
 
-                """
-                Call the apply kernels func to fill up the feature map.
-                """
-                #jit_apply_kernels = jax.jit(fun=self.apply_single_kernel)
+#               Call the apply kernels func to fill up the feature map.
+#               self.feature_map = self.feature_map.at[ex_idx, a2:b2].set(self.apply_single_kernel(X_tuple=X_tuple,w_begin_idx=a1,w_end_idx=b1,kernel_idx=kernel_idx))
+                w_tuple = tuple(map(float, self.weights[a1:b1]))
 
-                self.feature_map = self.feature_map.at[ex_idx, a2:b2].set(self.apply_single_kernel(X[ex_idx], self.weights[a1:b1],
-                                                                      self.kernel_lengths[kernel_idx], self.biases[kernel_idx],
-                                                                      self.dilations[kernel_idx], self.paddings[kernel_idx]))
+                features = features.at[ex_idx, a2:b2].set(self.apply_single_kernel(X_tuple=X_tuple,
+                                                         kernel_length = int(self.kernel_lengths[kernel_idx]),
+                                                         bias = float(self.biases[kernel_idx]),
+                                                         dilation = int(self.dilations[kernel_idx]),
+                                                         padding = int(self.paddings[kernel_idx]),
+                                                         weights = w_tuple))
+
+
 
                 a1 = b1
                 a2 = b2
 
+        return features
 
 """
 # Dummy Input
