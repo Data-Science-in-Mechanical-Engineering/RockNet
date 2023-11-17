@@ -6,6 +6,7 @@ import jax.numpy as jnp
 import jax
 import equinox as eqx
 from jax import jit
+from functools import partial
 
 class RocketKernel(eqx.Module):
     rkey: jax.random.PRNGKey(seed=11)
@@ -88,7 +89,7 @@ class RocketKernel(eqx.Module):
 
 
 # Applies single kernel to the input.
-    #@jit(static_argnums=['ending_index'])
+    @partial(jit, static_argnums=(1,2,3,4,5))
     def apply_single_kernel(self, X, weights, kernel_length, bias, dilation, padding):
 
         input_length = len(X)
@@ -145,9 +146,9 @@ class RocketKernel(eqx.Module):
                 """
                 Call the apply kernels func to fill up the feature map.
                 """
-                jit_apply_kernels = jax.jit(fun=self.apply_single_kernel)
+                #jit_apply_kernels = jax.jit(fun=self.apply_single_kernel)
 
-                self.feature_map = self.feature_map.at[ex_idx, a2:b2].set(jit_apply_kernels(X[ex_idx], self.weights[a1:b1],
+                self.feature_map = self.feature_map.at[ex_idx, a2:b2].set(self.apply_single_kernel(X[ex_idx], self.weights[a1:b1],
                                                                       self.kernel_lengths[kernel_idx], self.biases[kernel_idx],
                                                                       self.dilations[kernel_idx], self.paddings[kernel_idx]))
 
