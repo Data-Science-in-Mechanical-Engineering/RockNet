@@ -89,7 +89,7 @@ class RocketKernel(eqx.Module):
 
 
 # Applies single kernel to the input.
-    @partial(jit, static_argnums=(1,2,3,4,5))
+    @partial(jit, static_argnums=(1,2,3,4,5,6)
     def apply_single_kernel(self, X, weights, kernel_length, bias, dilation, padding):
 
         input_length = len(X)
