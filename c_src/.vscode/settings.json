@@ -1,5 +1,6 @@
 {
     "files.associations": {
-        "conv.h": "c"
+        "conv.h": "c",
+        "rocket_config.h": "c"
     }
 }

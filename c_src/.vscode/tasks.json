@@ -11,7 +11,8 @@
                 "${workspaceRoot}/main.c",
                 "${workspaceRoot}/src/*.c",
                 "-o",
-                "${workspaceRoot}/main.o"
+                "${workspaceRoot}/main.o",
+                "-lm"
             ],
             "options": {
                 "cwd": "${workspaceRoot}"

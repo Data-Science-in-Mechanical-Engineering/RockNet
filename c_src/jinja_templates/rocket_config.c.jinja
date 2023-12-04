@@ -1,0 +1,57 @@
+#include "rocket_config.h"
+#include "conv.h"
+#include <stdint.h>
+
+static float *timeseries[NUM_TIMESERIES];
+
+{% for tsdata in timeseries_data %}
+static const float timeseries_data{{loop.index}}[] = {{ tsdata }};
+{% endfor %}
+
+static float labels[] = {{labels}};
+
+static const uint16_t kernels[] = {{kernels}};
+static const uint32_t dilations[] = {{dilations}};
+static const float quantiles[] = {{quantiles}};
+
+static float biases[NUM_FEATURES];
+
+void init_rocket()
+{
+    {% for tsdata in timeseries_data %}
+    timeseries[{{loop.index-1}}] = timeseries_data{{loop.index}};
+    {% endfor %}
+
+    calc_bias(timeseries[0], biases, kernels, NUM_KERNELS, dilations, NUM_DILATIONS, quantiles, NUM_BIASES_PER_KERNEL);
+
+}
+
+float **get_timeseries()
+{
+    return timeseries;
+}
+
+float *get_labels()
+{
+    return labels;
+}
+
+uint16_t *get_kernels()
+{
+    return kernels;
+}
+
+uint32_t *get_dilations()
+{
+    return dilations;
+}
+
+float *get_quantiles()
+{
+    return quantiles;
+}
+
+float *get_biases()
+{
+    return biases;
+}
