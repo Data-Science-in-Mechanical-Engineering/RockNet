@@ -102,8 +102,9 @@ void calc_bias(const float *in, float *bias, uint16_t *kernels, uint32_t number_
 
             qsort(conv_timeseries3, LENGTH_TIME_SERIES, sizeof(float), cmpfunc);
 
-            for (uint32_t bias_idx = 0; bias_idx < biases_per_kernel; bias_idx++) {
+            for (uint32_t i = 0; i < biases_per_kernel; i++) {
                 bias[bias_idx] = conv_timeseries3[(int) min((LENGTH_TIME_SERIES * quantiles[bias_idx]), LENGTH_TIME_SERIES-1)];
+
                 bias_idx++;
             }
         }
@@ -137,7 +138,7 @@ void conv_multiple(const float *in, float *features, uint16_t *kernels, uint32_t
                         features[feature_idx]++;
                     }
                 }
-
+                features[feature_idx] /= LENGTH_TIME_SERIES;
                 feature_idx++;
             }
         }

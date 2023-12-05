@@ -9,5 +9,9 @@ int main()
 {
     init_rocket();
 
+    for (int i = 0; i < NUM_FEATURES; i++) {
+        printf("%f\n", get_biases()[i]);
+    }
+
     train();
 }

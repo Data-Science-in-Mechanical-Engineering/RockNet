@@ -4,6 +4,8 @@ import math
 
 from jinja2 import Template, Environment, FileSystemLoader
 
+import pandas as pd
+
 def generate_kernels():
     k = np.array([1, 1, 1, 0, 0, 0, 0, 0, 0])
 
@@ -71,6 +73,12 @@ def generate_data(len_timeseries):
     label = np.ones((len(data), ))
     label[0:50] = -1.0"""
 
+    """table = pd.read_table("/home/alex/Downloads/UCRArchive_2018/FordA/FordA_TRAIN.tsv", header=None)
+
+    labels = np.array(table.iloc[:, 0])
+    data = np.array(table.iloc[:, 1:])
+    return data, labels"""
+
     num_data = 1000
 
     data = np.zeros((num_data, len_timeseries))
@@ -80,7 +88,7 @@ def generate_data(len_timeseries):
         label[i] = 1.0
 
     for i in range(num_data // 2, num_data):
-        data[i, :] = np.sin(np.array([j/len_timeseries * 2 * np.pi for j in range(len_timeseries)]) + np.random.randn(1)*np.pi)
+        data[i, :] = np.sin(np.array([j/len_timeseries * 14 * np.pi for j in range(len_timeseries)]) + np.random.randn(1)*np.pi)
         label[i] = -1.0
 
     """data[0:50, :] = np.random.randn(50, len_timeseries) * 0.9
@@ -99,6 +107,8 @@ if __name__ == "__main__":
     len_timeseries = 101
 
     data, labels = generate_data(len_timeseries)
+
+    len_timeseries = len(data[0])
 
     dilations = generate_dilations(len_timeseries)
     kernels = generate_kernels()
