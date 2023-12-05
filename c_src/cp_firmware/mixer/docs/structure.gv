@@ -1,0 +1,33 @@
+##Command to get the layout: "dot -Tpdf structure.gv > structure.pdf"
+
+digraph G {
+    label="Mixer structure overview";
+    labelloc="t";
+    fontname="Helvetica";
+    node [fontname="Helvetica"]
+
+    subgraph cluster0 {
+        label="transport layer";
+        /* node [style=filled,color=white];
+        style=filled;
+        color=lightgrey; */
+        a0 -> a1 -> a2 -> a3;
+    }
+
+    subgraph cluster1 {
+        label="processing layer"
+        /* node [style=filled];
+        color=blue */
+        b0 -> b1 -> b2 -> b3;
+    }
+
+    mixer_init -> mixer_transport_init;
+    start -> b0;
+    a1 -> b3;
+    b2 -> a3;
+    a3 -> a0;
+    a3 -> end;
+    b3 -> end;
+    start [shape=Mdiamond];
+    end [shape=Msquare];
+}

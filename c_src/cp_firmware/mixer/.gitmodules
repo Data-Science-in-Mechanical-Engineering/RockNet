@@ -1,0 +1,3 @@
+[submodule "gpi"]
+	path = gpi
+	url = git@gitlab.com:nes-tud/gpi.git

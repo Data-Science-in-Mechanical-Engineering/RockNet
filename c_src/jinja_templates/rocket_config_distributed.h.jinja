@@ -1,0 +1,34 @@
+#ifndef ROCKET_CONFIG_H
+#define ROCKET_CONFIG_H
+
+#include <stdint.h>
+
+#define LENGTH_TIME_SERIES ({{length_time_series}})
+#define NUM_KERNELS ({{num_kernels}})
+#define NUM_DILATIONS ({{num_dilations}})
+#define NUM_BIASES_PER_KERNEL ({{num_biases_per_kernel}})
+#define NUM_FEATURES (NUM_KERNELS * NUM_DILATIONS * NUM_BIASES_PER_KERNEL)
+
+#define NUM_TIMESERIES ({{num_time_series}})
+
+#define MAX_FEATURES_PER_DEVICE ({{max_features_per_device}})
+
+static uint16_t devices_kernels_idx[] = {{devices_kernels_idx}};
+
+static uint16_t devices_num_features[] = {{devices_num_features}};
+
+void init_rocket();
+
+float **get_timeseries();
+
+float *get_labels();
+
+uint16_t *get_kernels();
+
+uint32_t *get_dilations();
+
+float *get_quantiles();
+
+float *get_biases();
+
+#endif

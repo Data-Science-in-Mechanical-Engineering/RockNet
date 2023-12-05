@@ -83,7 +83,7 @@ void train()
             float vt_hat = v_t_bias / (1 - beta_2_pow);
             bias -= LEARNING_RATE * mt_hat / (sqrtf(vt_hat) + EPSILON);
             d_bias = 0;
-            printf("Epoch: %u, Accuracy: %f, Bias %f \n", epoch, accuracy_filtered, bias);
+            printf("Epoch: %u, Accuracy: %u\n", (uint32_t) epoch, (uint32_t) (accuracy_filtered*100));
         }
         accuracy_filtered = gamma*train_step(get_timeseries()[epoch % NUM_TIMESERIES], get_labels()[epoch % NUM_TIMESERIES]) + (1 - gamma) * accuracy_filtered;
     }
