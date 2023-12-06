@@ -82,7 +82,7 @@ def generate_timing_configuration(message_size, num_devices):
 
 	# best_ind, best_time = get_min(round_times)
 	slot_length = round(slot_time) + 10  # plus 10 to have a bit of security gap
-	round_length = round(slot_length / 1000 * num_rounds) + 150 + 20
+	round_length = round(slot_length / 1000 * num_rounds) + 75 + 20
 	code = f"#define MX_PAYLOAD_SIZE {mixer_size}\n"
 	code += f"#define MX_ROUND_LENGTH {num_rounds}\n"
 	code += f"#define MX_SLOT_LENGTH GPI_TICK_US_TO_HYBRID2({slot_length})\n"
@@ -113,7 +113,7 @@ def generate_rocket_mixer_config(code_path, num_devices, num_total_nodes, len_ti
 
 	header_message_size = 2
 	metadata_message = header_message_size + 2
-	bytes_activations_sent = len_time_series * 4
+	bytes_activations_sent = len_time_series * 4 + 4 + 4
 	layer_message_size = max(metadata_message, header_message_size + bytes_activations_sent)
 
 	code_dnni_config_h += "\nstatic message_assignment_t message_assignment[] = {\n"
@@ -223,8 +223,8 @@ def generate_code(dataset, kernels, dilations, num_biases_per_kernel, quantiles,
 		shutil.copy(f"c_src/{'src' if f[-1] == 'c' else 'include'}/{f}", "c_src/cp_firmware/app/")"""
 
 	generate_rocket_mixer_config(code_path="c_src/cp_firmware/app/",
-								 num_devices=2,
-								 num_total_nodes=2,
+								 num_devices=num_nodes,
+								 num_total_nodes=num_nodes,
 								 len_time_series=len_timeseries)
 
 
@@ -266,7 +266,7 @@ def generate_data(len_timeseries):
 
 if __name__ == "__main__":
 	len_timeseries = 101
-	num_nodes = 2
+	num_nodes = 1
 
 	data, labels = generate_data(len_timeseries)
 

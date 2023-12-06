@@ -96,7 +96,7 @@ void calc_bias(const float *in, float *bias, uint16_t *kernels, uint32_t number_
         conv_1(timeseries_1, conv_timeseries_1, dilations[dilation_idx]);
 
 
-        for (uint32_t kernel_idx = devices_kernels_idx[TOS_NODE_ID-1]; kernel_idx < devices_kernels_idx[TOS_NODE_ID-1]; kernel_idx++) {
+        for (uint32_t kernel_idx = devices_kernels_idx[TOS_NODE_ID-1]; kernel_idx < devices_kernels_idx[TOS_NODE_ID]; kernel_idx++) {
 
             conv3(timeseries3, conv_timeseries3, kernels[kernel_idx], dilations[dilation_idx]);
 
@@ -126,7 +126,7 @@ void conv_multiple(const float *in, float *features, uint16_t *kernels, uint32_t
         conv_1(timeseries_1, conv_timeseries_1, dilations[dilation_idx]);
 
 
-        for (uint32_t kernel_idx = 0; kernel_idx < number_kernels; kernel_idx++) {
+        for (uint32_t kernel_idx = devices_kernels_idx[TOS_NODE_ID-1]; kernel_idx < devices_kernels_idx[TOS_NODE_ID]; kernel_idx++) {
 
             conv3(timeseries3, conv_timeseries3, kernels[kernel_idx], dilations[dilation_idx]);
 

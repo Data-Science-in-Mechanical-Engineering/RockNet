@@ -61,11 +61,11 @@ static float train_step(float out_pred, float out)
     }
 }
 
-void update_weights(float out_pred, float out)
+void update_weights(float out_pred, float out, uint32_t round_nmbr)
 {
     accuracy_filtered = gamma*train_step(out_pred, out) + (1 - gamma) * accuracy_filtered;
 
-    if (epoch % BATCH_SIZE == BATCH_SIZE - 1) {
+    if (round_nmbr % BATCH_SIZE == BATCH_SIZE - 1) {
         float beta_1_pow = powf(BETA_1, (int) (epoch / LENGTH_TIME_SERIES + 1));
         float beta_2_pow = powf(BETA_2, (int) (epoch / LENGTH_TIME_SERIES + 1));
         for (int i = 0; i < devices_num_features[TOS_NODE_ID-1]; i++) {

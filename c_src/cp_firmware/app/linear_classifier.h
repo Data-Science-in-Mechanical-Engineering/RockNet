@@ -7,6 +7,6 @@
 
 float classify_part(float *in);
 
-void update_weights(float out_pred, float out);
+void update_weights(float out_pred, float out, uint32_t round_nmbr);
 
 #endif

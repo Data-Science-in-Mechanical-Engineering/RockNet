@@ -78,7 +78,9 @@ typedef struct __attribute__((packed)) init_message_t_tag
 typedef struct __attribute__((packed)) time_series_message_t_tag
 {
         message_t header;
+        float classification;
         float data[LENGTH_TIME_SERIES];
+        float label;
 } time_series_message_t;
 
 typedef struct __attribute__((packed)) classification_message_t_tag

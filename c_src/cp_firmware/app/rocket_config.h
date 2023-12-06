@@ -11,11 +11,11 @@
 
 #define NUM_TIMESERIES (1000)
 
-#define MAX_FEATURES_PER_DEVICE (4872)
+#define MAX_FEATURES_PER_DEVICE (9744)
 
-static uint16_t devices_kernels_idx[] = {0, 42, 84,};
+static uint16_t devices_kernels_idx[] = {0, 84,};
 
-static uint16_t devices_num_features[] = {4872, 4872,};
+static uint16_t devices_num_features[] = {9744,};
 
 void init_rocket();
 

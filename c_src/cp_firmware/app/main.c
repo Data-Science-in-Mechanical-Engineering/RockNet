@@ -81,6 +81,8 @@ GPI_TRACE_CONFIG(main, GPI_TRACE_BASE_SELECTION);
 #include "rocket_config.h"
 #include "linear_classifier.h"
 
+#include "rocket_os.h"
+
 #include GPI_PLATFORM_PATH(radio.h)
 
 #include <nrf.h>
@@ -165,7 +167,7 @@ static uint8_t			agg_input[AGGREGATE_SIZE];
 // ATTENTION: it is important to have TOS_NODE_ID in .data (not in .bss), otherwise tos-set-symbol
 // will not work
 uint16_t __attribute__((section(".data")))	TOS_NODE_ID = 0;
-#define THIS_NODE_ID 1
+#define THIS_NODE_ID 4
 
 //**************************************************************************************************
 //***** Global Functions ****************************************************************************
@@ -400,18 +402,6 @@ static void initialization(void)
                   #endif
                   break;
 	}
-	/*#ifndef DISABLE_BOLT
-		// The Bolt MCU has to be up and running before we init Bolt here.
-		gpi_milli_sleep(500);
-		if (bolt_init() != 0)
-		{
-			while (1)
-			{
-				printf("Bolt cannot be initialized!\n");
-				gpi_milli_sleep(500);
-			}
-		}
-	#endif*/
         #if USE_SPI   
 	printf("Hardware initialized. Compiled at __DATE__ __TIME__ = " __DATE__ " " __TIME__ "\n");
         #endif
@@ -553,73 +543,12 @@ static void initialization(void)
 
 	printf("With current configuration: AGGREGATE_SIZE_M_C_PRIORITIES=%u, AGGREGATE_SIZE_ALL_PRIORITIES=%u\n", AGGREGATE_SIZE_M_C_PRIORITIES, AGGREGATE_SIZE_ALL_PRIORITIES);
         #endif
-	//mixer_print_config();
-
-	// We send the node ID of the CP to the AP for easier deployment (no need to specify AP node ID).
-	/*#ifndef DISABLE_BOLT
-		bolt_write(&init_pkt, LEN_BOLT_INIT);
-	#endif*/
-        //bolt_pkt_t rx_dummy;
-        //spi_send((uint8_t *) &init_pkt, (uint8_t *) &rx_dummy, sizeof(bolt_pkt_t));
+	mixer_print_config();
         
 }
 
-/*static uint8_t communication_finished_callback_temp(mixer_message_t *mess, uint8_t* t)
-{
-  printf("Communication finished!");
-  return 0;
-}
 
 
-
-static uint16_t communication_starts_callback_temp(mixer_message_t *mess)
-{
-  printf("Communication starts!");
-}*/
-
-/*static void send_data_to_AP(mixer_message_t *tx_message, uint16_t size)
-{
-  
-/*
-    mixer_message_t rx_dummy;
-    // raise GPIO2 Line -> notifies AP that the round is finished. !!! GPIO2 line is different for Eval and CF-Board
-    SET_COM_GPIOCS();
-    gpi_micro_sleep(SPI_WAIT_TIME);
-    for (int i = 0; i < size; i++) {
-      spi_send((uint8_t *) &tx_message[i], (uint8_t *) &rx_dummy, sizeof(message_t));
-      // just as safety such that slave is ready
-      gpi_micro_sleep(SPI_WAIT_TIME);	
-
-      switch (tx_message[i].header.type) {
-        case TYPE_ERROR: break;
-        case TYPE_ALL_AGENTS_READY:
-        case TYPE_METADATA:     
-                  spi_send((uint8_t *) &tx_message[i].data, (uint8_t *) &rx_dummy, sizeof(metadata_t)); 
-                  break;
-        default:
-                  spi_send((uint8_t *) &tx_message[i].data, (uint8_t *) &rx_dummy, MESSAGES_SIZES(TRANSFORM_TYPE_BACK(tx_message[i].header.type))); 
-      }
-      gpi_micro_sleep(SPI_WAIT_TIME);
-    }
-    // notify AP that now the whole data has been transmitted and it should start with its calculations.
-    CLR_COM_GPIOCS();
-    mixer_message_t transmission_finished_message;
-    transmission_finished_message.header.type = TYPE_TRANSMISSION_FINISHED;
-    spi_send((uint8_t *) &transmission_finished_message.header, (uint8_t *) &rx_dummy, sizeof(message_t));  */  
-//}
-
-/*static void receive_data_from_AP(ap_message_t *rx_message) 
-{
-    ap_message_t tx_dummy;
-    tx_dummy.header.type = TYPE_ERROR;
-    tx_dummy.header.id = 0;
-    spi_send((uint8_t *) &tx_dummy, (uint8_t *) rx_message, sizeof(mixer_message_t));
-}
-
-static void wait_ap_spi()
-{
-  gpi_micro_sleep(10);
-}*/
 
 
 //**************************************************************************************************
@@ -636,6 +565,8 @@ int main()
 
     init_rocket();
 
+    if (NUM_ELEMENTS(nodes))
+
     //train();
     
     for (int i = 0; i < NUM_ELEMENTS(dnni_nodes); i++) {
@@ -648,8 +579,8 @@ int main()
           NRF_P0->OUTCLR = BV(25);
           gpi_milli_sleep(2000);
         }*/
-        printf("Starting Inference OS\r\n");
-        //run_dnni_os(TOS_NODE_ID);
+        printf("Starting Rocket OS\r\n");
+        run_rocket_os(TOS_NODE_ID);
       }
     }
 

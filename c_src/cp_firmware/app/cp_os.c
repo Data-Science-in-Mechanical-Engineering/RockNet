@@ -156,10 +156,10 @@ void run_rounds(uint8_t (*communication_finished_callback)(ap_message_t*, uint8_
     CLR_COM_LED();
     ticks_start = gpi_tick_hybrid() - ticks_start;
     ticks_start = gpi_tick_hybrid_to_us(ticks_start);
-    #if DEVICE_ID == 1
-    printf("i: %u\n", ticks_start);
-    printf("m: %u\n", messages_received_idx - 1);
-    #endif
+    if (TOS_NODE_ID != 1) {
+      printf("i: %u\n", ticks_start);
+      printf("m: %u\n", messages_received_idx - 1);
+    }
 
     // toggle pin
     gpi_milli_sleep(1);
@@ -192,9 +192,9 @@ void run_rounds(uint8_t (*communication_finished_callback)(ap_message_t*, uint8_
     while (gpi_tick_compare_hybrid(gpi_tick_hybrid(), SYNC_OFFSET(t_ref)) < 0);
     ticks_start = gpi_tick_hybrid() - ticks_start;
     ticks_start = gpi_tick_hybrid_to_us(ticks_start);
-    #if DEVICE_ID != 1
-    printf("c: %u\n", ticks_start);
-    #endif
+    if (TOS_NODE_ID != 1) {
+      printf("c: %u\n", ticks_start);
+    }
     ticks_start = gpi_tick_hybrid();
     SET_COM_LED();
 
