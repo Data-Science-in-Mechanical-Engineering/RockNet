@@ -82,20 +82,21 @@ void add_timeseries(const float *in1, const float *in2, float *out)
 }
 
 static int cmpfunc (const void * a, const void * b) {
-   return ( *(float*)a - *(float*)b );
+   return ( *(float*)a > *(float*)b );
 }
 
-void calc_bias(const float *in, float *bias, uint16_t *kernels, uint32_t number_kernels, uint32_t *dilations, uint32_t number_dilations, float *quantiles, uint32_t biases_per_kernel)
+void calc_bias(const float *in, float *bias, uint16_t *kernels, uint32_t number_kernels_total, uint32_t *dilations, uint32_t number_dilations, float *quantiles, uint32_t biases_per_kernel)
 {
     mult_1(in, timeseries_1);
     mult3(in, timeseries3);
 
     uint32_t bias_idx = 0;
+    uint32_t quantiles_idx = 0;
     for (uint32_t dilation_idx = 0; dilation_idx < number_dilations; dilation_idx++) {
 
         conv_1(timeseries_1, conv_timeseries_1, dilations[dilation_idx]);
 
-
+        quantiles_idx += biases_per_kernel * devices_kernels_idx[TOS_NODE_ID-1];
         for (uint32_t kernel_idx = devices_kernels_idx[TOS_NODE_ID-1]; kernel_idx < devices_kernels_idx[TOS_NODE_ID]; kernel_idx++) {
 
             conv3(timeseries3, conv_timeseries3, kernels[kernel_idx], dilations[dilation_idx]);
@@ -105,12 +106,18 @@ void calc_bias(const float *in, float *bias, uint16_t *kernels, uint32_t number_
 
             qsort(conv_timeseries3, LENGTH_TIME_SERIES, sizeof(float), cmpfunc);
 
-            for (uint32_t i = 0; i < biases_per_kernel; i++) {
-                bias[bias_idx] = conv_timeseries3[(int) min((LENGTH_TIME_SERIES * quantiles[bias_idx]), LENGTH_TIME_SERIES-1)];
+            /*for (int i = 0; i < LENGTH_TIME_SERIES; i++) {
+              printf("%d\n", (int32_t) (conv_timeseries3[i]*1000));
+            }*/
 
+            for (uint32_t i = 0; i < biases_per_kernel; i++) {
+                bias[bias_idx] = conv_timeseries3[(int) min((LENGTH_TIME_SERIES * quantiles[quantiles_idx]), LENGTH_TIME_SERIES-1)];
+                //printf("%u: %u, %d\n", quantiles_idx, kernels[kernel_idx], (int32_t) (bias[bias_idx]*1000));
                 bias_idx++;
+                quantiles_idx++;
             }
         }
+        quantiles_idx += biases_per_kernel * (number_kernels_total - devices_kernels_idx[TOS_NODE_ID]);
     }
 }
 

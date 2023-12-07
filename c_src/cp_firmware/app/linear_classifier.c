@@ -18,11 +18,9 @@ static float features[MAX_FEATURES_PER_DEVICE];
 #define BETA_2 (0.999f)
 #define EPSILON (1e-8)
 
-#define LEARNING_RATE (5e-7)
+#define LEARNING_RATE (1e-4)
 
 #define BATCH_SIZE 100
-
-static uint64_t epoch = 0;
 
 static float accuracy_filtered = 0;
 static const float gamma = 0.01;
@@ -64,10 +62,10 @@ static float train_step(float out_pred, float out)
 void update_weights(float out_pred, float out, uint32_t round_nmbr)
 {
     accuracy_filtered = gamma*train_step(out_pred, out) + (1 - gamma) * accuracy_filtered;
-
+    printf("%u\n", round_nmbr);
     if (round_nmbr % BATCH_SIZE == BATCH_SIZE - 1) {
-        float beta_1_pow = powf(BETA_1, (int) (epoch / LENGTH_TIME_SERIES + 1));
-        float beta_2_pow = powf(BETA_2, (int) (epoch / LENGTH_TIME_SERIES + 1));
+        float beta_1_pow = powf(BETA_1, (int) (round_nmbr / LENGTH_TIME_SERIES + 1));
+        float beta_2_pow = powf(BETA_2, (int) (round_nmbr / LENGTH_TIME_SERIES + 1));
         for (int i = 0; i < devices_num_features[TOS_NODE_ID-1]; i++) {
             m_t_weight[i] = BETA_1 * m_t_weight[i] + (1 - BETA_1) * d_weight[i];
             v_t_weight[i] = BETA_2 * v_t_weight[i] + (1 - BETA_2) * d_weight[i] * d_weight[i];
@@ -85,7 +83,9 @@ void update_weights(float out_pred, float out, uint32_t round_nmbr)
         float vt_hat = v_t_bias / (1 - beta_2_pow);
         bias -= LEARNING_RATE * mt_hat / (sqrtf(vt_hat) + EPSILON);
         d_bias = 0;
-        printf("Epoch: %u, Accuracy: %u\n", (uint32_t) epoch, (uint32_t) (accuracy_filtered*100));
+        if (TOS_NODE_ID != 1) {
+          bias = 0;
+        }
+        printf("Epoch: %u, Accuracy: %u\n", (uint32_t) round_nmbr, (uint32_t) (accuracy_filtered*100));
     }
-    epoch++;
 }

@@ -14,7 +14,7 @@ static const uint16_t kernels[] = {{kernels}};
 static const uint32_t dilations[] = {{dilations}};
 static const float quantiles[] = {{quantiles}};
 
-static float biases[NUM_FEATURES];
+static float biases[MAX_FEATURES_PER_DEVICE];
 
 extern uint16_t __attribute__((section(".data"))) TOS_NODE_ID;
 

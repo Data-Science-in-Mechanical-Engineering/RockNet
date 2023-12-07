@@ -20,6 +20,7 @@
 #define MX_INITIATOR_ID			nodes[0] // 1
 #define ROUND_PERIOD				GPI_TICK_MS_TO_HYBRID2(ROUND_LENGTH_MS)
 
+//9698
 
 // Possible values (Gpi_Radio_Mode):
 //		IEEE_802_15_4	= 1

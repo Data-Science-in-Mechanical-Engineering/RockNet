@@ -15,9 +15,9 @@ static ap_com_handle hap_com;
 
 static uint32_t round_nmbr = 0;
 
-static float rx_time_series_last_round;
+static uint16_t rx_time_series_last_round;
 static float timeseries[LENGTH_TIME_SERIES];
-static float label;
+static float label = 0;
 
 static float linear_classification_part = 0;
 
@@ -57,9 +57,11 @@ static uint8_t communication_finished_callback(ap_message_t *data, uint16_t size
     } else {
       if (data[i].header.type == TYPE_CLASSIFICATION) {
         cummulative += data[i].classification_message.classification;
+        //printf("Cummulative: %d\n", (int32_t) (cummulative*10000));
       } else {
         if (data[i].header.type == TYPE_TIME_SERIES) {
           cummulative += data[i].time_series_message.classification;
+          //printf("Cummulative: %u\n", (uint32_t) (cummulative*10000));
           time_series_data_idx = i;
         }
       }
@@ -67,6 +69,7 @@ static uint8_t communication_finished_callback(ap_message_t *data, uint16_t size
   }
 
   if (rx_time_series_last_round) {
+    //printf("Cummulative: %d\n", (int32_t) (cummulative*10000));
     update_weights(cummulative, label, round_nmbr);
   }
 

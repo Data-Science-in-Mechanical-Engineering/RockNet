@@ -167,7 +167,7 @@ static uint8_t			agg_input[AGGREGATE_SIZE];
 // ATTENTION: it is important to have TOS_NODE_ID in .data (not in .bss), otherwise tos-set-symbol
 // will not work
 uint16_t __attribute__((section(".data")))	TOS_NODE_ID = 0;
-#define THIS_NODE_ID 4
+#define THIS_NODE_ID 2
 
 //**************************************************************************************************
 //***** Global Functions ****************************************************************************
@@ -564,8 +564,22 @@ int main()
     printf("Hello There\r\n");
 
     init_rocket();
+    //while(1){}
 
-    if (NUM_ELEMENTS(nodes))
+    float a = 0;
+    float label = 0;
+    int current_ts_idx = 0;
+    // central learning
+    if (NUM_ELEMENTS(dnni_nodes) == 1) {
+      for (uint32_t i = 0; i < 100000; i++) {
+        current_ts_idx = i%NUM_TIMESERIES;
+        label = get_labels()[i%NUM_TIMESERIES];
+        a = classify_part(get_timeseries()[current_ts_idx]);
+        update_weights(a, label, i+2);
+        //current_ts_idx = i%NUM_TIMESERIES;
+        //label = get_labels()[i%NUM_TIMESERIES];
+      }
+    }
 
     //train();
     

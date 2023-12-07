@@ -28,7 +28,7 @@ if __name__ == "__main__":
 		if "Accuracy:" in line:
 			line.replace("\n", "")
 			acc = line.split(":")[-1]
-			data["accuracy"].append(acc)
+			data["accuracy"].append(int(acc))
 
 			if len(data["timestamp"]) == 0:
 				start = time.time()

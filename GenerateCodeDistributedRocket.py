@@ -241,7 +241,7 @@ def generate_data(len_timeseries):
 	return data, labels"""
 
 	num_data = 1000
-
+	np.random.seed(1)
 	data = np.zeros((num_data, len_timeseries))
 	label = np.ones((num_data,))
 	for i in range(num_data // 2):
@@ -256,7 +256,6 @@ def generate_data(len_timeseries):
 	label = np.ones((len(data),))
 	label[0:50] = -1.0"""
 
-	np.random.seed(1)
 	shuffle_vec = np.array([i for i in range(len(data))])
 	np.random.shuffle(shuffle_vec)
 	data = data[shuffle_vec, :]
@@ -266,7 +265,7 @@ def generate_data(len_timeseries):
 
 if __name__ == "__main__":
 	len_timeseries = 101
-	num_nodes = 1
+	num_nodes = 5
 
 	data, labels = generate_data(len_timeseries)
 
@@ -283,6 +282,6 @@ if __name__ == "__main__":
 
 	print(len(kernel_bins))
 	for e in kernel_bins:
-		print(f"{e:09b}")
-
+		#print(f"{e:09b}")
+		print(f"{e}")
 
