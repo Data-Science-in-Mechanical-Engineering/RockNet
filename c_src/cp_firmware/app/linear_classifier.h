@@ -5,7 +5,9 @@
 #include <stdio.h>
 #include <math.h>
 
-float classify_part(float *in);
+#include "rocket_config.h"
+
+float classify_part(const time_series_type_t *in);
 
 void update_weights(float out_pred, float out, uint32_t round_nmbr);
 

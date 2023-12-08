@@ -14,15 +14,16 @@ static const uint8_t nodes[] = {1, 2, 3, 4, 5, 5};
 static const uint8_t dnni_nodes[] = {1, 2, 3, 4, 5};
 
 static message_assignment_t message_assignment[] = {
-	{.id=1, .size=414},
- 	{.id=2, .size=414},
- 	{.id=3, .size=414},
- 	{.id=4, .size=414},
- 	{.id=5, .size=414}};
-#define MX_PAYLOAD_SIZE 83
+	{.id=254, .size=107},
+ 	{.id=1, .size=10},
+ 	{.id=2, .size=10},
+ 	{.id=3, .size=10},
+ 	{.id=4, .size=10},
+ 	{.id=5, .size=10}};
+#define MX_PAYLOAD_SIZE 54
 #define MX_ROUND_LENGTH 150
-#define MX_SLOT_LENGTH 9698 //GPI_TICK_US_TO_HYBRID2(1822)
-#define ROUND_LENGTH_MS                 170
-#define MX_GENERATION_SIZE 26
+#define MX_SLOT_LENGTH 7314 //GPI_TICK_US_TO_HYBRID2(1009)
+#define ROUND_LENGTH_MS                 ((150*MX_SLOT_LENGTH / (GPI_HYBRID_CLOCK_RATE / 1000000)) / 1000 + 76)
+#define MX_GENERATION_SIZE 8
 
 #endif /* INC_DNNI_CONFIG_H */

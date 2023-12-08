@@ -2,13 +2,13 @@
 #include "conv.h"
 #include <stdint.h>
 
-static float *timeseries[NUM_TIMESERIES];
+static time_series_type_t const *timeseries[NUM_TIMESERIES];
 
 {% for tsdata in timeseries_data %}
-static const float timeseries_data{{loop.index}}[] = {{ tsdata }};
+static const time_series_type_t timeseries_data{{loop.index}}[] = {{ tsdata }};
 {% endfor %}
 
-static float labels[] = {{labels}};
+static const float labels[] = {{labels}};
 
 static const uint16_t kernels[] = {{kernels}};
 static const uint32_t dilations[] = {{dilations}};
@@ -29,27 +29,27 @@ void init_rocket()
 
 }
 
-float **get_timeseries()
+const time_series_type_t const **get_timeseries()
 {
     return timeseries;
 }
 
-float *get_labels()
+const float *get_labels()
 {
     return labels;
 }
 
-uint16_t *get_kernels()
+const uint16_t *get_kernels()
 {
     return kernels;
 }
 
-uint32_t *get_dilations()
+const uint32_t *get_dilations()
 {
     return dilations;
 }
 
-float *get_quantiles()
+const float *get_quantiles()
 {
     return quantiles;
 }

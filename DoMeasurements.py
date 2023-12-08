@@ -12,6 +12,7 @@ def get_boxplot(a):
 if __name__ == "__main__":
 	max_num_samples = 1000
 	num_nodes = 5
+	quantize = True
 	ser = serial.Serial('COM3', baudrate=921600)
 	print("Connected.")
 
@@ -38,6 +39,6 @@ if __name__ == "__main__":
 
 			raw_data = pd.DataFrame(data)
 
-			raw_data.to_csv(f"../Accuracy{num_nodes}.csv")
+			raw_data.to_csv(f"../Accuracy{num_nodes}{quantize}.csv")
 
 		# print(len(inference_durations))

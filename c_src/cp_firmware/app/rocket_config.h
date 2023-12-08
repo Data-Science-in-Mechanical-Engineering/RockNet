@@ -13,21 +13,23 @@
 
 #define MAX_FEATURES_PER_DEVICE (1972)
 
+typedef int8_t time_series_type_t;
+
 static uint16_t devices_kernels_idx[] = {0, 17, 34, 51, 68, 84,};
 
 static uint16_t devices_num_features[] = {1972, 1972, 1972, 1972, 1856,};
 
 void init_rocket();
 
-float **get_timeseries();
+const time_series_type_t const **get_timeseries();
 
-float *get_labels();
+const float *get_labels();
 
-uint16_t *get_kernels();
+const uint16_t *get_kernels();
 
-uint32_t *get_dilations();
+const uint32_t *get_dilations();
 
-float *get_quantiles();
+const float *get_quantiles();
 
 float *get_biases();
 

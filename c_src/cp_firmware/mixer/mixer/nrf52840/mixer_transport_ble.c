@@ -1798,6 +1798,18 @@ void mixer_transport_print_config(void)
 		#else
 			) * 1.0003));
 		#endif
+       
+        printf("%-25s = %" PRIu32 "\n", "min. slot length us",
+		gpi_tick_hybrid_to_us((uint32_t) ((PACKET_AIR_TIME + RX_TO_GRID_OFFSET + 2 * RX_WINDOW_MAX + GPI_TICK_US_TO_HYBRID(ISR_LATENCY_BUFFER)
+		+ GPI_TICK_US_TO_HYBRID(25)
+		// + duration of MAX(radio_isr, timeout_isr) = ca. 20us -> take 25us
+		// everything times 300ppm (1.0003)
+		#if GPI_HYBRID_CLOCK_USE_VHT
+			+ GPI_TICK_US_TO_HYBRID(1000000 / GPI_SLOW_CLOCK_RATE + 30)));
+		#else
+			) * 1.0003)));
+		#endif
+        printf("%-25s = %" PRIu32 "\n", "round length ms", ROUND_LENGTH_MS);
 
 	#undef PRINT
 }

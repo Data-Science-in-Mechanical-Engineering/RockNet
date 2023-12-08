@@ -92,7 +92,7 @@ void wait_for_AP(ap_message_t *AP_pkt)
    }
 }
 
-void run_rounds(uint8_t (*communication_finished_callback)(ap_message_t*, uint8_t*), uint16_t (*communication_starts_callback)(ap_message_t*))
+void run_rounds(uint8_t (*communication_finished_callback)(ap_message_t*, uint16_t), uint16_t (*communication_starts_callback)(ap_message_t**))
 {
   init_message_t init_pkt = {.round = 0};
   // init buffer, which saves messages, which are received

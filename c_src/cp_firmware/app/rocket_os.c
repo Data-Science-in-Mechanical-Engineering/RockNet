@@ -9,6 +9,7 @@
 #include "cp_os.h"
 #include "rocket_os.h"
 #include "linear_classifier.h"
+#include "rocket_config.h"
 #include <stdint.h>
 
 static ap_com_handle hap_com;
@@ -16,12 +17,13 @@ static ap_com_handle hap_com;
 static uint32_t round_nmbr = 0;
 
 static uint16_t rx_time_series_last_round;
-static float timeseries[LENGTH_TIME_SERIES];
+static time_series_type_t timeseries[LENGTH_TIME_SERIES];
 static float label = 0;
 
 static float linear_classification_part = 0;
 
 static ap_message_t message;
+static ap_message_t ts_message;
 
 extern uint16_t __attribute__((section(".data"))) TOS_NODE_ID;
 
@@ -47,7 +49,7 @@ static void send_data_to_AP(ap_message_t *data, uint16_t size)
 static uint8_t communication_finished_callback(ap_message_t *data, uint16_t size)
 {
   float cummulative = 0;
-  float timeseries[LENGTH_TIME_SERIES];
+  time_series_type_t timeseries[LENGTH_TIME_SERIES];
   uint16_t time_series_data_idx = 0xFFFF;
 
   // parse messages
@@ -60,7 +62,7 @@ static uint8_t communication_finished_callback(ap_message_t *data, uint16_t size
         //printf("Cummulative: %d\n", (int32_t) (cummulative*10000));
       } else {
         if (data[i].header.type == TYPE_TIME_SERIES) {
-          cummulative += data[i].time_series_message.classification;
+          //cummulative += data[i].time_series_message.classification;
           //printf("Cummulative: %u\n", (uint32_t) (cummulative*10000));
           time_series_data_idx = i;
         }
@@ -98,20 +100,15 @@ static uint16_t communication_starts_callback(ap_message_t **data)
 {
   // write timeseries in tx_message
   data[0] = &message;
+  data[0]->classification_message.classification = linear_classification_part;
   if (TOS_NODE_ID == 1) {
-    float **tsp = get_timeseries();
+    data[1] = &ts_message;
+    const time_series_type_t const **tsp = get_timeseries();
     for (uint16_t j = 0; j < LENGTH_TIME_SERIES; j++) {
-      data[0]->time_series_message.data[j] = tsp[round_nmbr % NUM_TIMESERIES][j];
+      data[1]->time_series_message.data[j] = tsp[round_nmbr % NUM_TIMESERIES][j];
     }
-
-    data[0]->header.id = TOS_NODE_ID;
-    data[0]->header.type = TYPE_TIME_SERIES;
-    data[0]->time_series_message.classification = linear_classification_part;
-    data[0]->time_series_message.label = get_labels()[round_nmbr % NUM_TIMESERIES];
-  } else {
-    data[0]->header.id = TOS_NODE_ID;
-    data[0]->header.type = TYPE_CLASSIFICATION;
-    data[0]->classification_message.classification = linear_classification_part;
+    data[1]->time_series_message.label = get_labels()[round_nmbr % NUM_TIMESERIES];
+    return 2;
   }
   return 1;
 }
@@ -119,6 +116,12 @@ static uint16_t communication_starts_callback(ap_message_t **data)
 void run_rocket_os(uint8_t id)
 { 
   printf("Init device %u started\n", TOS_NODE_ID);
+
+  message.header.id = TOS_NODE_ID;
+  message.header.type = TYPE_CLASSIFICATION;
+
+  ts_message.header.id = 254;
+  ts_message.header.type = TYPE_TIME_SERIES;
 
   init_ap_com(&hap_com, &send_uart, &receive_uart, &rx_wait_uart, &tx_wait_uart);
   init_cp_os(&receive_data_from_AP, &send_data_to_AP, &communication_finished_callback, &communication_starts_callback, id);

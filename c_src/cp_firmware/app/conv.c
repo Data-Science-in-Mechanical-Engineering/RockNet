@@ -13,21 +13,21 @@
   
 extern uint16_t __attribute__((section(".data"))) TOS_NODE_ID;
 
-static void mult_timeseries(const float *in, float *out, float scalar)
+static void mult_timeseries(const time_series_type_t *in, float *out, time_series_type_t scalar)
 {
     for (uint32_t i = 0; i < LENGTH_TIME_SERIES; i++) {
         out[i] = scalar * in[i];
     }
 }
 
-void mult_1(const float *in, float *out)
+void mult_1(const time_series_type_t *in, float *out)
 {
-    mult_timeseries(in, out, -1.0f);
+    mult_timeseries(in, out, (time_series_type_t) -1);
 }
 
-void mult3(const float *in, float *out)
+void mult3(const time_series_type_t *in, float *out)
 {
-    mult_timeseries(in, out, 3.0f);
+    mult_timeseries(in, out, (time_series_type_t) 3);
 }
 
 
@@ -74,7 +74,7 @@ void conv3(const float *in3, float *out, uint16_t kernel, uint32_t dilation)
     }
 }
 
-void add_timeseries(const float *in1, const float *in2, float *out)
+void add_timeseries(const float *in1, const float *in2, time_series_type_t *out)
 {
     for (uint32_t i = 0; i < LENGTH_TIME_SERIES; i++) {
         out[i] = in1[i] + in2[i];
@@ -85,7 +85,7 @@ static int cmpfunc (const void * a, const void * b) {
    return ( *(float*)a > *(float*)b );
 }
 
-void calc_bias(const float *in, float *bias, uint16_t *kernels, uint32_t number_kernels_total, uint32_t *dilations, uint32_t number_dilations, float *quantiles, uint32_t biases_per_kernel)
+void calc_bias(const time_series_type_t *in, float *bias, uint16_t *kernels, uint32_t number_kernels_total, uint32_t *dilations, uint32_t number_dilations, float *quantiles, uint32_t biases_per_kernel)
 {
     mult_1(in, timeseries_1);
     mult3(in, timeseries3);
@@ -122,7 +122,7 @@ void calc_bias(const float *in, float *bias, uint16_t *kernels, uint32_t number_
 }
 
 
-void conv_multiple(const float *in, float *features, uint16_t *kernels, uint32_t number_kernels, uint32_t *dilations, uint32_t number_dilations, float *biases, uint32_t number_biases_per_kernel)
+void conv_multiple(const time_series_type_t *in, float *features, uint16_t *kernels, uint32_t number_kernels, uint32_t *dilations, uint32_t number_dilations, float *biases, uint32_t number_biases_per_kernel)
 {
     mult_1(in, timeseries_1);
     mult3(in, timeseries3);

@@ -27,7 +27,7 @@ static const float gamma = 0.01;
 
 extern uint16_t __attribute__((section(".data")))	TOS_NODE_ID;
 
-float classify_part(float *in)
+float classify_part(const time_series_type_t *in)
 {
     // this is different than the central implementation. here we calculate the features assigned to our device.
     conv_multiple(in, features, get_kernels(), NUM_KERNELS, get_dilations(), NUM_DILATIONS, get_biases(), NUM_BIASES_PER_KERNEL);
@@ -62,7 +62,6 @@ static float train_step(float out_pred, float out)
 void update_weights(float out_pred, float out, uint32_t round_nmbr)
 {
     accuracy_filtered = gamma*train_step(out_pred, out) + (1 - gamma) * accuracy_filtered;
-    printf("%u\n", round_nmbr);
     if (round_nmbr % BATCH_SIZE == BATCH_SIZE - 1) {
         float beta_1_pow = powf(BETA_1, (int) (round_nmbr / LENGTH_TIME_SERIES + 1));
         float beta_2_pow = powf(BETA_2, (int) (round_nmbr / LENGTH_TIME_SERIES + 1));

@@ -57,18 +57,17 @@ def generate_node_array(name, id_nodes):
 	return code
 
 
-def generate_timing_configuration(message_size, num_devices):
-	mixer_size = message_size
+def generate_timing_configuration(message_size_list, num_devices):
+	mixer_size = max(message_size_list)
+	message_size_max = max(message_size_list)
 	i = 1
 	while mixer_size > 100:
-		mixer_size = int(message_size // i)
-		if mixer_size * i < message_size:
+		mixer_size = int(message_size_max // i)
+		if mixer_size * i < message_size_max:
 			mixer_size += 1
 		i += 1
 
-	message_list = [message_size for _ in range(num_devices)]
-
-	num_messages = calculate_num_messages(mixer_size, message_list)
+	num_messages = calculate_num_messages(mixer_size, message_size_list)
 
 	num_rounds = calculate_num_rounds(num_messages)
 
@@ -82,7 +81,7 @@ def generate_timing_configuration(message_size, num_devices):
 
 	# best_ind, best_time = get_min(round_times)
 	slot_length = round(slot_time) + 10  # plus 10 to have a bit of security gap
-	round_length = round(slot_length / 1000 * num_rounds) + 75 + 20
+	round_length = f"(({num_rounds}*MX_SLOT_LENGTH / (GPI_HYBRID_CLOCK_RATE / 1000000)) / 1000 + {int(280 / num_devices) + 20})"
 	code = f"#define MX_PAYLOAD_SIZE {mixer_size}\n"
 	code += f"#define MX_ROUND_LENGTH {num_rounds}\n"
 	code += f"#define MX_SLOT_LENGTH GPI_TICK_US_TO_HYBRID2({slot_length})\n"
@@ -93,7 +92,7 @@ def generate_timing_configuration(message_size, num_devices):
 	return code
 
 
-def generate_rocket_mixer_config(code_path, num_devices, num_total_nodes, len_time_series):
+def generate_rocket_mixer_config(code_path, num_devices, num_total_nodes, len_time_series, quantize):
 	# generate code for nodes
 	code_dnni_config_h = "#ifndef INC_DNNI_CONFIG_H\n#define INC_DNNI_CONFIG_H\n"
 
@@ -112,18 +111,22 @@ def generate_rocket_mixer_config(code_path, num_devices, num_total_nodes, len_ti
 	code_dnni_config_h += generate_node_array("dnni_nodes", id_devices)
 
 	header_message_size = 2
-	metadata_message = header_message_size + 2
-	bytes_activations_sent = len_time_series * 4 + 4 + 4
-	layer_message_size = max(metadata_message, header_message_size + bytes_activations_sent)
+	metadata_message_size = header_message_size + 2
+	timeseries_message_size = header_message_size + len_time_series * (4 if not quantize else 1) + 4
+	classification_message_size = header_message_size + 4 + 4
 
 	code_dnni_config_h += "\nstatic message_assignment_t message_assignment[] = {\n"
-	for idd in id_devices: # [1]:
-		code_dnni_config_h += f"	{{.id={idd}, .size={layer_message_size}}},\n "
+	for idd in [254]:
+		code_dnni_config_h += f"	{{.id={idd}, .size={timeseries_message_size}}},\n "
+	for idd in id_devices:
+		code_dnni_config_h += f"	{{.id={idd}, .size={classification_message_size}}},\n "
 	code_dnni_config_h = code_dnni_config_h[0:-3]
 	code_dnni_config_h += "};\n"
 
 	# calculate timing configurations
-	code_dnni_config_h += generate_timing_configuration(message_size=layer_message_size, num_devices=num_devices)
+	code_dnni_config_h += generate_timing_configuration(
+		message_size_list=[timeseries_message_size] + [classification_message_size] * len(id_devices),
+		num_devices=num_devices)
 
 	code_dnni_config_h += "\n#endif /* INC_DNNI_CONFIG_H */\n"
 	with open(f"{code_path}/rocket_mixer_config.h", 'w') as f:
@@ -185,7 +188,7 @@ def generate_matrix_code(matrix, use_float):
 	return data[0:-1] + "}"
 
 
-def generate_code(dataset, kernels, dilations, num_biases_per_kernel, quantiles, num_nodes):
+def generate_code(dataset, kernels, dilations, num_biases_per_kernel, quantiles, num_nodes, quantize):
 	jinja_environment = Environment(loader=FileSystemLoader('c_src/jinja_templates'))
 	template_rocket_config_h = jinja_environment.get_template('rocket_config_distributed.h.jinja')
 	template_rocket_config_c = jinja_environment.get_template('rocket_config_distributed.c.jinja')
@@ -195,12 +198,13 @@ def generate_code(dataset, kernels, dilations, num_biases_per_kernel, quantiles,
 	devices_num_features = np.array([len(dilations)*num_biases_per_kernel*n for n in num_kernels_per_device])
 
 	template_values = {
+		'time_series_type_t': "int8_t" if quantize else "float",
 		'length_time_series': len(dataset[0][0]),
 		'num_time_series': len(dataset[0]),
 		'num_kernels': len(kernels),
 		'num_dilations': len(dilations),
 		'num_biases_per_kernel': num_biases_per_kernel,
-		'timeseries_data': [generate_matrix_code(m, use_float=True) for m in dataset[0]],
+		'timeseries_data': [generate_matrix_code(m, use_float=not quantize) for m in dataset[0]],
 		'labels': generate_matrix_code(dataset[1], use_float=True),
 		'kernels': generate_matrix_code(kernels, use_float=False),
 		'dilations': generate_matrix_code(dilations, use_float=False),
@@ -225,10 +229,11 @@ def generate_code(dataset, kernels, dilations, num_biases_per_kernel, quantiles,
 	generate_rocket_mixer_config(code_path="c_src/cp_firmware/app/",
 								 num_devices=num_nodes,
 								 num_total_nodes=num_nodes,
-								 len_time_series=len_timeseries)
+								 len_time_series=len_timeseries,
+								 quantize=quantize)
 
 
-def generate_data(len_timeseries):
+def generate_data(len_timeseries, quantize):
 	"""data = np.random.randn(50, len_timeseries)
 	data[0:50, :] = np.random.randn(50, len_timeseries) * 0.9
 	label = np.ones((len(data), ))
@@ -259,6 +264,13 @@ def generate_data(len_timeseries):
 	shuffle_vec = np.array([i for i in range(len(data))])
 	np.random.shuffle(shuffle_vec)
 	data = data[shuffle_vec, :]
+
+	if quantize:
+		max_int = 2**7 - 1
+		scale = max_int / np.max(np.abs(data))
+		data = np.clip(data * scale, a_min=-max_int, a_max=max_int)
+		print(np.max(data))
+
 	label = label[shuffle_vec]
 	return data, label
 
@@ -266,8 +278,9 @@ def generate_data(len_timeseries):
 if __name__ == "__main__":
 	len_timeseries = 101
 	num_nodes = 5
+	quantize = True
 
-	data, labels = generate_data(len_timeseries)
+	data, labels = generate_data(len_timeseries, quantize)
 
 	len_timeseries = len(data[0])
 
@@ -276,7 +289,10 @@ if __name__ == "__main__":
 
 	num_biases_per_kernel = int(10_000 / (len(dilations) * len(kernels)))
 
-	generate_code((data, labels), kernels, dilations, num_biases_per_kernel, quantiles(len(dilations)*len(kernels)*num_biases_per_kernel), num_nodes=num_nodes)
+	generate_code((data, labels), kernels, dilations, num_biases_per_kernel,
+				  quantiles(len(dilations)*len(kernels)*num_biases_per_kernel),
+				  num_nodes=num_nodes,
+				  quantize=quantize)
 
 	kernel_bins = generate_kernels()
 

@@ -22,7 +22,7 @@ if __name__ == "__main__":
 		if "m:" in line:
 			line.replace("\n", "")
 			m = int(line.split(":")[-1])
-			if m < 5:
+			if m < 6:
 				print(f"Lost message {m}")
 
 		# print(len(inference_durations))
