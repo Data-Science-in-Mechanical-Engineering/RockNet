@@ -11,13 +11,13 @@
 
 #define NUM_TIMESERIES (1000)
 
-#define MAX_FEATURES_PER_DEVICE (1972)
+#define MAX_FEATURES_PER_DEVICE (696)
 
 typedef int8_t time_series_type_t;
 
-static uint16_t devices_kernels_idx[] = {0, 17, 34, 51, 68, 84,};
+static uint16_t devices_kernels_idx[] = {0, 6, 12, 18, 24, 30, 36, 42, 48, 54, 59, 64, 69, 74, 79, 84,};
 
-static uint16_t devices_num_features[] = {1972, 1972, 1972, 1972, 1856,};
+static uint16_t devices_num_features[] = {696, 696, 696, 696, 696, 696, 696, 696, 696, 580, 580, 580, 580, 580, 580,};
 
 void init_rocket();
 

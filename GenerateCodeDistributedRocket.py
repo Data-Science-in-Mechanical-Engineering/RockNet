@@ -277,7 +277,7 @@ def generate_data(len_timeseries, quantize):
 
 if __name__ == "__main__":
 	len_timeseries = 101
-	num_nodes = 5
+	num_nodes = 15
 	quantize = True
 
 	data, labels = generate_data(len_timeseries, quantize)
