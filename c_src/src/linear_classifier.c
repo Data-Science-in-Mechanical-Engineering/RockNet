@@ -41,11 +41,11 @@ float classify(float *in)
         temp += in[i] * weight[i];
     }
 
-    #ifdef PARAMETERLESS
+    //#ifdef PARAMETERLESS
     return temp + bias;
-    #else
-    return tanhf(temp + bias);
-    #endif
+    //#else
+    //return tanhf(temp + bias);
+    //#endif
 }
 
 static float train_step(float *in, float out)
@@ -55,17 +55,17 @@ static float train_step(float *in, float out)
     float out_pred = classify(features);
     // printf("Features %f, %f, %f\n", features[100], features[1001], features[2000]);
     for (uint32_t i = 0; i < NUM_FEATURES; i++) {
-        #ifdef PARAMETERLESS
+        //#ifdef PARAMETERLESS
         d_weight[i] -= features[i] * (out - out_pred);
-        #else
-        d_weight[i] -= (features[i] * (out - out_pred) * ((1 - out_pred*out_pred)));
-        #endif
+        //#else
+        //d_weight[i] -= (features[i] * (out - out_pred) * ((1 - out_pred*out_pred)));
+        //#endif
     }
-    #ifdef PARAMETERLESS
+    //#ifdef PARAMETERLESS
     d_bias -= (out - out_pred);
-    #else
-    d_bias -= (out - out_pred) * (1 - out_pred*out_pred);
-    #endif
+    //#else
+    //d_bias -= (out - out_pred) * (1 - out_pred*out_pred);
+    //#endif
     // printf("out: %f, out_pred: %f \n", out, out_pred);
     
     //return (out - out_pred) * (out - out_pred);
