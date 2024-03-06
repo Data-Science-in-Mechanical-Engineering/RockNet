@@ -1,0 +1,16 @@
+show_print: True
+
+# dataset global options
+dataset_name: ElectricDevices
+train_size: 0.8
+dataloader_num_workers: 8
+
+# optimizer options
+batch_size: 256
+batch_size_testing: 4096
+learning_rate: 0.0001
+max_epochs: 5000
+patience_lr: 50
+patience: 100000
+use_cocob: True #True
+
