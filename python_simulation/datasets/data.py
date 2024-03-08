@@ -1,4 +1,5 @@
 import pandas as pd
+import torch
 from torch.utils.data import Dataset
 import numpy as np
 
@@ -43,6 +44,8 @@ def load_ucr_dataset(name, test=False):
 
 class ClassificationDataset:
     def __init__(self, params):
+        np.random.seed(0)
+        torch.random.manual_seed(0)
         print(f"Starting to load dataset {params['dataset_name']}...")
         self.params = params
 
@@ -64,6 +67,11 @@ class ClassificationDataset:
         X_train = transform(X_train, rocket_parameters)
         X_test = transform(X_test, rocket_parameters)
 
+        # X_train = torch.tensor(X_train, device="cuda:0")
+        # X_test = torch.tensor(X_test, device="cuda:0")
+        # y_train = torch.tensor(y_train, device="cuda:0")
+        # y_test = torch.tensor(y_test, device="cuda:0")
+
         self.train_ds = PartDataset(X_train[0:size_training, :], y_train[0:size_training])
         self.eval_ds = PartDataset(X_train[size_training:, :], y_train[size_training:])
         self.test_ds = PartDataset(X_test, y_test)
@@ -74,7 +82,9 @@ class ClassificationDataset:
         self.X_test = X_test
         self.y_test = y_test
 
-        print(f"Loaded dataset {params['dataset_name']} with {self.num_classes} classes, length of {self.length_timeseries} and {len(X_train) + len(X_test)} entrances")
+        print(f"Loaded dataset {params['dataset_name']} with {self.num_classes} classes, "
+              f"length of {self.length_timeseries} "
+              f"with {len(X_train)} training entrances and {len(X_test)} test entrances")
 
 
 
