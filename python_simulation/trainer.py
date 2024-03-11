@@ -175,10 +175,10 @@ class Trainer:
         return validation_loss, accuracy
 
 
-def parallel_simulation_wrapper(params):
+def parallel_simulation_wrapper(params, seed):
     printout = f"Dataset: {params['dataset_name']}, cocob: {params['use_cocob']}, lr: {params['learning_rate']}"
     print(f"Starting {printout}")
-    Trainer(params).run()
+    Trainer(params, seed).run()
     print(f"Finished {printout}")
     return 0
 
