@@ -43,9 +43,9 @@ def load_ucr_dataset(name, test=False):
 
 
 class ClassificationDataset:
-    def __init__(self, params):
-        np.random.seed(0)
-        torch.random.manual_seed(0)
+    def __init__(self, params, seed):
+        np.random.seed(seed)
+        torch.random.manual_seed(seed)
         print(f"Starting to load dataset {params['dataset_name']}...")
         self.params = params
 

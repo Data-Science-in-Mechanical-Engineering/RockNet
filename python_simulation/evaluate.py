@@ -14,7 +14,7 @@ if __name__ == "__main__":
 
     for name_dataset in names:
         plt.figure(figsize=(10,10))
-        learning_rates = [0.001, 0.0001] #[0.1, 0.01, 0.001, 0.0001, 0.00001]
+        learning_rates = [0.1, 0.01, 0.001, 0.0001, 0.00001]
 
         files = ([get_logger_name(name_dataset, use_cocob=True)]
                  + [get_logger_name(name_dataset, use_cocob=False, learning_rate=l) for l in learning_rates])

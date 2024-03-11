@@ -10,7 +10,7 @@ if __name__ == "__main__":
     data = pd.read_csv(f"{Path.home()}/datasets/DataSummary.csv")
     names = data["Name"]
 
-    learning_rates = [0.001, 0.0001] #[0.1, 0.01, 0.001, 0.0001, 0.00001]
+    learning_rates = [0.1, 0.01, 0.001, 0.0001, 0.00001]
 
     with open(parameter_path, "r") as file:
         params = yaml.safe_load(file)

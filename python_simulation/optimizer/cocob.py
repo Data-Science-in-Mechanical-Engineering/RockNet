@@ -100,10 +100,11 @@ import torch
 
 class COCOB_Backprop(optim.Optimizer):
 
-    def __init__(self, params, alpha=100, epsilon=1e-8):
+    def __init__(self, params, alpha=100, epsilon=1e-8, weight_decay=0):
 
         self._alpha = alpha
         self.epsilon = epsilon
+        self.weight_decay = weight_decay
         defaults = dict(alpha=alpha, epsilon=epsilon)
         super(COCOB_Backprop, self).__init__(params, defaults)
 
@@ -119,7 +120,7 @@ class COCOB_Backprop(optim.Optimizer):
                 if p.grad is None:
                     continue
 
-                grad = p.grad.data
+                grad = p.grad.data + self.weight_decay * p.data
                 state = self.state[p]
 
                 if len(state) == 0:

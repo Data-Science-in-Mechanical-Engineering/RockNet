@@ -55,9 +55,10 @@ def get_accuracy(y_pred, labels):
 
 
 class Trainer:
-    def __init__(self, params):
+    def __init__(self, params, seed):
         self.__params = params
-        self.__classification_dataset = ClassificationDataset(self.__params)
+        self.__seed = seed
+        self.__classification_dataset = ClassificationDataset(self.__params, seed)
 
         self.__train_dl = get_dataloader(self.__classification_dataset.train_ds,
                                          batch_size=self.__params["batch_size"],
@@ -80,7 +81,7 @@ class Trainer:
             self.__scheduler = optim.lr_scheduler.ReduceLROnPlateau(self.__optimizer, factor=0.5, min_lr=1e-8,
                                                                     patience=params["patience_lr"])
         else:
-            self.__optimizer = COCOB_Backprop(self.__model.parameters())
+            self.__optimizer = COCOB_Backprop(self.__model.parameters(), weight_decay=1e-6)
             self.print("Using COCOB")
         self.__model.apply(init)
 
@@ -125,7 +126,7 @@ class Trainer:
             self.__accuracies.append(test_accuracy.detach().cpu().numpy())
 
             if epoch % 10 == 0:
-                file_name = get_logger_name(self.__params['dataset_name'],
+                file_name = get_logger_name(f"{self.__params['dataset_name']}_{self.__seed}",
                                             use_cocob=self.__params['use_cocob'],
                                             learning_rate=self.__params['learning_rate'])
                 with open(f"results/{file_name}", 'wb') as handle:
