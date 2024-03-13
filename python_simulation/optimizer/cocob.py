@@ -136,7 +136,7 @@ class COCOB_Backprop(optim.Optimizer):
                 L = state['L']
                 reward = state['reward']
 
-                zero = torch.cuda.FloatTensor([0.]).to(device)
+                zero = torch.zeros((1,)).to(device)
 
                 L_update = torch.max(L, torch.abs(grad))
                 gradients_sum_update = gradients_sum + grad
