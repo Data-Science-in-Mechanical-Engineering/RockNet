@@ -25,8 +25,9 @@ def plot_data(file, color, label):
 if __name__ == "__main__":
     print(get_logger_name("a", use_cocob=True))
 
-    data = pd.read_csv(f"{Path.home()}/datasets/DataSummary.csv")
-    names = data["Name"]
+    """data = pd.read_csv(f"{Path.home()}/datasets/DataSummary.csv")
+    names = data["Name"]"""
+    names = ["Adiac", "AllGestureWiimoteX", "AllGestureWiimoteY", "AllGestureWiimoteZ", "ArrowHead"]
 
     max_num_seeds = 100
     colors=['b', 'r', 'g', 'm', 'y', 'k']
@@ -35,19 +36,18 @@ if __name__ == "__main__":
         plt.figure(figsize=(10,10))
         learning_rates = [0.1, 0.01, 0.001, 0.0001, 0.00001]
 
-        files = ([get_logger_name(name_dataset, use_cocob=True)]
-                 + [get_logger_name(name_dataset, use_cocob=False, learning_rate=l) for l in learning_rates])
-
         color_idx = 0
-        for seed in range(max_num_seeds):
-            name_dataset_seed = f"{name_dataset}_{seed}"
-            plot_data(get_logger_name(name_dataset, use_cocob=True), colors[color_idx])
-
         for l in learning_rates:
             for seed in range(max_num_seeds):
                 name_dataset_seed = f"{name_dataset}_{seed}"
-                plot_data(get_logger_name(name_dataset, use_cocob=False, learning_rate=l), colors[color_idx])
-            color_idx+=1
+                label = get_logger_name(name_dataset_seed, use_cocob=False, learning_rate=l)
+                plot_data(get_logger_name(name_dataset_seed, use_cocob=False, learning_rate=l), colors[color_idx], label=seed==0)
+            color_idx += 1
+
+        for seed in range(max_num_seeds):
+            name_dataset_seed = f"{name_dataset}_{seed}"
+            label = get_logger_name(name_dataset_seed, use_cocob=True)
+            plot_data(get_logger_name(name_dataset_seed, use_cocob=True), colors[color_idx], label=seed==0)
 
         plt.title(name_dataset)
         plt.legend()
