@@ -25,11 +25,12 @@ def plot_data(file, color, label):
 if __name__ == "__main__":
     print(get_logger_name("a", use_cocob=True))
 
-    """data = pd.read_csv(f"{Path.home()}/datasets/DataSummary.csv")
-    names = data["Name"]"""
-    names = ["Adiac", "AllGestureWiimoteX", "AllGestureWiimoteY", "AllGestureWiimoteZ", "ArrowHead"]
+    data = pd.read_csv(f"{Path.home()}/datasets/DataSummary.csv")
+    names = data["Name"]
+    # names = ["NonInvasiveFetalECGThorax2", "Crop", "ChlorineConcentration"]
 
     max_num_seeds = 100
+    seed_offset = 0
     colors=['b', 'r', 'g', 'm', 'y', 'k']
 
     for name_dataset in names:
@@ -44,7 +45,7 @@ if __name__ == "__main__":
                 plot_data(get_logger_name(name_dataset_seed, use_cocob=False, learning_rate=l), colors[color_idx], label=seed==0)
             color_idx += 1
 
-        for seed in range(max_num_seeds):
+        for seed in range(seed_offset, seed_offset + max_num_seeds):
             name_dataset_seed = f"{name_dataset}_{seed}"
             label = get_logger_name(name_dataset_seed, use_cocob=True)
             plot_data(get_logger_name(name_dataset_seed, use_cocob=True), colors[color_idx], label=seed==0)

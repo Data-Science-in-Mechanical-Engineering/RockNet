@@ -100,10 +100,15 @@ class Trainer:
             # train
             loss = 0
             num_datapoints = 0
+            at_least_one_batch = False
             for batch_nr, batch in enumerate(self.__train_dl):
                 #X_transform = transform(batch["input"].numpy(), rocket_parameters)
                 X_transform = batch["input"].to(device)
                 labels = batch["target"].to(device)
+
+                if at_least_one_batch and self.__params["batch_size"] > len(X_transform):
+                    continue
+                at_least_one_batch = True
 
                 self.__optimizer.zero_grad()
                 _Y_training = self.__model(X_transform)
@@ -111,11 +116,9 @@ class Trainer:
                 training_loss.backward()
                 self.__optimizer.step()
                 loss += training_loss * len(batch["input"])
-                print(training_loss)
                 num_datapoints += len(batch["input"])
                 # print(len(batch["input"]))
 
-            print(loss.detach().item() / num_datapoints)
 
             #validate
             self.__model.eval()
@@ -206,6 +209,5 @@ if __name__ == "__main__":
     parameter_path = "parameters/test.yaml"
     with open(parameter_path, "r") as file:
         params = yaml.safe_load(file)
-
-    Trainer(params).run()
+    Trainer(params, seed=0).run()
 
