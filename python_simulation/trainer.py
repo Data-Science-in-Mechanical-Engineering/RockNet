@@ -1,8 +1,10 @@
 import copy
+import math
 import multiprocessing
 import time
 from pathlib import Path
 
+import pandas as pd
 import yaml
 
 from datasets.data import ClassificationDataset
@@ -24,14 +26,23 @@ import pickle as p
 device = "cuda" if torch.cuda.is_available() else "cpu"
 
 
-def get_logger_name(dataset_name, use_cocob, learning_rate=None):
+def get_logger_name(dataset_name, use_cocob, use_rocket, learning_rate=None):
     app = f"lr_{learning_rate}".replace(".", "_") if not use_cocob else "cocob"
+    app += "" if use_rocket else "nn"
     return f"{dataset_name}_{app}.p"
+
 
 def init(layer):
     if isinstance(layer, nn.Linear):
         nn.init.constant_(layer.weight.data, 0)
         nn.init.constant_(layer.bias.data, 0)
+
+
+def init_nn(layer):
+    if isinstance(layer, nn.Linear):
+        layer.weight.data.normal_(mean=0.0, std=1/math.sqrt(len(layer.weight)))
+        nn.init.constant_(layer.bias.data, 0)
+
 
 
 def get_dataloader(
@@ -70,10 +81,25 @@ class Trainer:
                                         batch_size=self.__params["batch_size_testing"],
                                         num_workers=self.__params["dataloader_num_workers"])
 
-        self.__num_features = 84 * (10_000 // 84)
+        self.__num_features = self.__classification_dataset.num_features
 
-        self.__model = nn.Sequential(nn.Linear(self.__num_features, self.__classification_dataset.num_classes,
-                                               device=device))
+        if self.__params["use_rocket"]:
+            self.__model = nn.Sequential(nn.Linear(self.__num_features, self.__classification_dataset.num_classes,
+                                                   device=device))
+        else:
+
+            layers = [nn.Linear(self.__num_features, self.__params["num_neurons"],
+                                                   device=device), nn.ReLU()]
+
+            for i in range(self.__params["num_layers"]):
+                layers += [nn.Linear(self.__params["num_neurons"], self.__params["num_neurons"],
+                                     device=device), nn.ReLU()]
+
+            layers += [nn.Linear(self.__params["num_neurons"], self.__classification_dataset.num_classes,
+                                 device=device)]
+
+            self.__model = nn.Sequential(*layers)
+            print(self.__model)
         self.__loss_function = nn.CrossEntropyLoss()
 
         if not self.__params["use_cocob"]:
@@ -83,7 +109,11 @@ class Trainer:
         else:
             self.__optimizer = COCOB_Backprop(self.__model.parameters(), weight_decay=1e-6)
             self.print("Using COCOB")
-        self.__model.apply(init)
+
+        if params["use_rocket"]:
+            self.__model.apply(init)
+        else:
+            self.__model.apply(init_nn)
 
         self.__best_model = None
 
@@ -130,6 +160,7 @@ class Trainer:
 
             if epoch % 10 == 0:
                 file_name = get_logger_name(f"{self.__params['dataset_name']}_{self.__seed}",
+                                            use_rocket=self.__params["use_rocket"],
                                             use_cocob=self.__params['use_cocob'],
                                             learning_rate=self.__params['learning_rate'])
                 with open(f"results/{file_name}", 'wb') as handle:
@@ -151,7 +182,7 @@ class Trainer:
             self.print(f"Epoch {epoch+1} took {time.time()-start},\n"
                        f"validation_accuracy={validation_accuracy*100},\n"
                        f"test_accuracy={test_accuracy*100}%,\n"
-                       f"loss={validation_loss}")
+                       f"loss={loss/num_datapoints}")
 
     def print(self, text):
         if self.__params["show_print"]:
@@ -207,7 +238,12 @@ if __name__ == "__main__":
 
     np.random.seed(1)
     parameter_path = "parameters/test.yaml"
-    with open(parameter_path, "r") as file:
-        params = yaml.safe_load(file)
-    Trainer(params, seed=0).run()
+    df = pd.read_csv(f"{Path.home()}/datasets/DataSummary.csv")
+    names = df["Name"]
+
+    for n in names[30:]:
+        with open(parameter_path, "r") as file:
+            params = yaml.safe_load(file)
+        params["dataset_name"] = n
+        Trainer(params, seed=0).run()
 

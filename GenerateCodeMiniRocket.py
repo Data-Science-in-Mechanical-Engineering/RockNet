@@ -1,3 +1,5 @@
+import copy
+
 import numpy as np
 from sympy.utilities.iterables import multiset_permutations
 import math
@@ -7,6 +9,7 @@ from jinja2 import Template, Environment, FileSystemLoader
 import pandas as pd
 import shutil
 
+import matplotlib.pyplot as plt
 
 def calculate_num_rounds(num_messages):
 	base_num_rounds = 150
@@ -197,7 +200,6 @@ def generate_code(dataset, kernels, dilations, num_biases_per_kernel, quantiles)
 		'kernels': generate_matrix_code(kernels, use_float=False),
 		'dilations': generate_matrix_code(dilations, use_float=False),
 		'quantiles': generate_matrix_code(quantiles, use_float=True),
-		'devices_num_features': generate_matrix_code(),
 	}
 
 	output = template_rocket_config_h.render(template_values)
@@ -218,6 +220,22 @@ def generate_code(dataset, kernels, dilations, num_biases_per_kernel, quantiles)
 								 len_time_series=len_timeseries)
 
 
+def simulate_linear_system(A, C, x0, length, noise):
+	Y = np.zeros((length, ))
+	Y[0] = C @ x0
+	x = copy.deepcopy(x0)
+	for i in range(1, length):
+		x = A@x+np.random.randn(*x0.shape)*noise
+		Y[i] = C@x
+
+	return Y
+
+def generate_matrix(dim):
+	A = np.random.randn(dim, dim)
+	while not np.all(np.abs(np.linalg.eig(A)[0]) < 1):
+		A = np.random.randn(dim, dim)
+	return A
+
 def generate_data(len_timeseries):
 	"""data = np.random.randn(50, len_timeseries)
 	data[0:50, :] = np.random.randn(50, len_timeseries) * 0.9
@@ -230,21 +248,44 @@ def generate_data(len_timeseries):
 	data = np.array(table.iloc[:, 1:])
 	return data, labels"""
 
-	num_data = 1000
+	num_data = 40000
+	np.random.seed(1000)
+	A1 = generate_matrix(5)
+	print(np.linalg.eig(A1)[0])
+	C1 = np.random.randn(1, 5)
+
+	A2 = A1 * 0.5  #generate_matrix(5)
+	C2 = 2.1*C1  #np.random.randn(1, 5)
+
+	x0 = 10*np.random.randn(5, num_data//2+1)
 
 	data = np.zeros((num_data, len_timeseries))
 	label = np.ones((num_data,))
 	for i in range(num_data // 2):
-		data[i, :] = np.sin(np.array([j/len_timeseries * 15 * np.pi for j in range(len_timeseries)]) + np.random.randn(1)*np.pi)
+		#data[i, :] = np.sin(np.array([j/len_timeseries * 15 * np.pi for j in range(len_timeseries)]) + np.random.randn(1)*np.pi)
+		data[i, :] = simulate_linear_system(A1, C1, x0[:, i], len_timeseries, noise=1)
 		label[i] = 1.0
 
+	j = 0
 	for i in range(num_data // 2, num_data):
-		data[i, :] = np.sin(np.array([j/len_timeseries * 14 * np.pi for j in range(len_timeseries)]) + np.random.randn(1)*np.pi)
+		#data[i, :] = np.sin(np.array([j/len_timeseries * 14 * np.pi for j in range(len_timeseries)]) + np.random.randn(1)*np.pi)
+		data[i, :] = simulate_linear_system(A2, C2, x0[:, j], len_timeseries, noise=2)
 		label[i] = -1.0
+		j += 1
+
+	counts, bins = np.histogram(data[0:num_data // 2, -10:].flatten(), bins=100, density=True)
+	plt.stairs(counts, bins)
+
+	counts, bins = np.histogram(data[num_data // 2:, -10:].flatten(), bins=100, density=True)
+	plt.stairs(counts, bins)
+
+	plt.show()
 
 	"""data[0:50, :] = np.random.randn(50, len_timeseries) * 0.9
 	label = np.ones((len(data),))
 	label[0:50] = -1.0"""
+
+
 
 	np.random.seed(1)
 	shuffle_vec = np.array([i for i in range(len(data))])

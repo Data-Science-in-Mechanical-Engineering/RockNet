@@ -23,11 +23,9 @@ def plot_data(file, color, label):
 
 
 if __name__ == "__main__":
-    print(get_logger_name("a", use_cocob=True))
-
     data = pd.read_csv(f"{Path.home()}/datasets/DataSummary.csv")
     names = data["Name"]
-    # names = ["NonInvasiveFetalECGThorax2", "Crop", "ChlorineConcentration"]
+    names = ["NonInvasiveFetalECGThorax2", "Crop", "ChlorineConcentration"]
 
     max_num_seeds = 100
     seed_offset = 0
