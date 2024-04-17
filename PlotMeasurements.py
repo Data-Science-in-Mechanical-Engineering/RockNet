@@ -26,19 +26,20 @@ def plot_ram():
 if __name__ == "__main__":
 	plot_ram()
 	quantize = True
+	name = "Parameterless"
 	print(plt.style.available)
 	plt.figure(figsize=(3, 3))
 	plt.tight_layout()
 	plt.style.use('seaborn-talk')
-	for num_nodes in [5, 1]:
+	for num_nodes in [5]:
 
-		data = pd.read_csv(f"../Accuracy{num_nodes}{quantize}.csv")
+		data = pd.read_csv(f"../Accuracy{name}{num_nodes}{quantize}.csv")
 		print(data["timestamp"])
 
 		plt.plot(data["timestamp"], data["accuracy"], label=f"{num_nodes} device{'s' if num_nodes > 1 else ''}")
 		#plt.plot(data["accuracy"], label=f"{num_nodes}")
 
-	plt.xlabel("Time (s)")
+	plt.xlabel("Wall time (s)")
 	plt.ylabel("Accuracy (%)")
 	plt.legend()
 	plt.savefig('C:\\Users\\mf724021\\Downloads\\RocketTraining.png', bbox_inches='tight')
