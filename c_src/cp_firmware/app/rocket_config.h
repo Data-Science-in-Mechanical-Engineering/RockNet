@@ -13,6 +13,8 @@
 
 #define MAX_FEATURES_PER_DEVICE (696)
 
+#define NUM_CLASSES (10)
+
 typedef int8_t time_series_type_t;
 
 static uint16_t devices_kernels_idx[] = {0, 6, 12, 18, 24, 30, 36, 42, 48, 54, 59, 64, 69, 74, 79, 84,};
