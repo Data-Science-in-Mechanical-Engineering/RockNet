@@ -347,14 +347,14 @@ def generate_data_ucr(num_trajectories, name_dataset, test):
 
 
 if __name__ == "__main__":
-	len_timeseries = 101
+	# len_timeseries = 101
 	num_nodes = 2
-	quantize = False
+	quantize = True
 
-	data, labels = generate_data(len_timeseries, quantize)
+	# data, labels = generate_data(len_timeseries, quantize)
 
-	data_training, labels_training = generate_data_ucr(num_trajectories=1000, name_dataset="ECGFiveDays", test=False)
-	data_test, labels_test = generate_data_ucr(num_trajectories=1000, name_dataset="ECGFiveDays", test=True)
+	data_training, labels_training = generate_data_ucr(num_trajectories=500, name_dataset="ECGFiveDays", test=False)
+	data_test, labels_test = generate_data_ucr(num_trajectories=200, name_dataset="ECG5000", test=True)
 
 	len_timeseries = len(data_training[0])
 

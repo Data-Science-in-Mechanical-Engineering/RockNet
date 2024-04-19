@@ -27,7 +27,7 @@ if __name__ == "__main__":
 
     data = pd.read_csv(f"{Path.home()}/datasets/DataSummary.csv")
     names = data["Name"]
-    # names = ["NonInvasiveFetalECGThorax2", "Crop", "ChlorineConcentration"]
+    names = ["ECG5000", "ChlorineConcentration", "Crop", "ECGFiveDays"]
 
     max_num_seeds = 100
     seed_offset = 0
@@ -35,7 +35,7 @@ if __name__ == "__main__":
 
     for name_dataset in names:
         plt.figure(figsize=(10,10))
-        learning_rates = [0.1, 0.01, 0.001, 0.0001, 0.00001]
+        learning_rates = [0.0001] # [0.1, 0.01, 0.001, 0.0001, 0.00001]
 
         color_idx = 0
         for l in learning_rates:
@@ -45,10 +45,10 @@ if __name__ == "__main__":
                 plot_data(get_logger_name(name_dataset_seed, use_cocob=False, learning_rate=l), colors[color_idx], label=seed==0)
             color_idx += 1
 
-        for seed in range(seed_offset, seed_offset + max_num_seeds):
+        """for seed in range(seed_offset, seed_offset + max_num_seeds):
             name_dataset_seed = f"{name_dataset}_{seed}"
             label = get_logger_name(name_dataset_seed, use_cocob=True)
-            plot_data(get_logger_name(name_dataset_seed, use_cocob=True), colors[color_idx], label=seed==0)
+            plot_data(get_logger_name(name_dataset_seed, use_cocob=True), colors[color_idx], label=seed==0)"""
 
         plt.title(name_dataset)
         plt.legend()

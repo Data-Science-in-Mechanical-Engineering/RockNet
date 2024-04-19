@@ -20,7 +20,7 @@
 
 #define MAX_FEATURES_PER_DEVICE (4830)
 
-typedef float time_series_type_t;
+typedef int8_t time_series_type_t;
 
 static uint16_t devices_kernels_idx[] = {0, 42, 84,};
 
