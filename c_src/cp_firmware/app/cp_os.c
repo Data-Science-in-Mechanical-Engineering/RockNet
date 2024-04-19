@@ -136,21 +136,15 @@ void run_rounds(uint8_t (*communication_finished_callback)(ap_message_t*, uint16
     // write aggregate (currently not used)
     //set_flag_in_agg(agg_input, plant_idx);
     //set_node_in_agg(agg_input, 0, TOS_NODE_ID);
-    //set_prio_in_agg(agg_input, 0, 1);
+    set_prio_in_agg(agg_input, 0, 1);
     mixer_write_agg(agg_input);
     // write into mixer
     for (uint16_t tx_message_idx = 0; tx_message_idx < size_tx_messages; tx_message_idx++) {
       // when the agent does not want to send anything, it sends a TYPE_DUMMY
       if (tx_messages[tx_message_idx]->header.type != TYPE_DUMMY) {
         // the id of the message in the message layer is written in the header.
-        //message_layer_set_message(tx_messages[tx_message_idx]->header.id, (uint8_t *) tx_messages[tx_message_idx]);
+        message_layer_set_message(tx_messages[tx_message_idx]->header.id, (uint8_t *) tx_messages[tx_message_idx]);
       }
-    }
-
-    for (uint16_t tx_message_idx = MX_GENERATION_SIZE-1; tx_message_idx >0; tx_message_idx--) {
-      uint8_t a = 1;
-      mixer_write(tx_message_idx, &a, MX_PAYLOAD_SIZE);
-      printf("tx: %u, %u\r\n", tx_message_idx, (&a)[0]);
     }
 
     // arm mixer
@@ -188,11 +182,6 @@ void run_rounds(uint8_t (*communication_finished_callback)(ap_message_t*, uint16
       while (gpi_tick_compare_hybrid(gpi_tick_hybrid(), MIXER_OFFSET(t_ref, ROUND_PERIOD)) < 0);
     }
     CLR_COM_GPIO1();      
-    /*if (round % 2) {
-      NRF_P0->OUTCLR = BV(25);
-    } else {
-      NRF_P0->OUTSET = BV(25);
-    }*/
     // ATTENTION: don't delay after the polling loop (-> print before)
     CLR_COM_LED();
     ticks_start = gpi_tick_hybrid();
@@ -219,21 +208,10 @@ void run_rounds(uint8_t (*communication_finished_callback)(ap_message_t*, uint16
     messages_received_idx = 0;
     for (uint16_t i = 0; i < NUM_ELEMENTS(message_assignment); i++) {
       // write data in array, when message was received
-      //messages_received_idx += message_layer_get_message(message_assignment[i].id, (uint8_t *) &mixer_messages_received[messages_received_idx]);
+      messages_received_idx += message_layer_get_message(message_assignment[i].id, (uint8_t *) &mixer_messages_received[messages_received_idx]);
     }
         
-    mixer_print_statistics();
-    for (uint16_t tx_message_idx = 1; tx_message_idx < MX_GENERATION_SIZE; tx_message_idx++) {
-        void *p = mixer_read(tx_message_idx);
-
-        // check if message was received. Return 0 if not.
-        if (NULL == p) {
-          continue;
-        } else if ((void*)-1 == p) {
-          continue;
-        } 
-        printf("rx: %u:  %u\r\n", tx_message_idx, ((uint8_t *) p)[0]);
-    }
+    // mixer_print_statistics();
 
     // synchronize to the initiator node
     init_message_t init_message;

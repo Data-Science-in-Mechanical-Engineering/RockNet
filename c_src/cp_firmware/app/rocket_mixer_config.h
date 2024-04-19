@@ -10,7 +10,7 @@ typedef struct message_assignment_t_tag
 	uint16_t size_end; // the size of the piece of the message in the mixer message at index mixer_assignment_end-1 
 } message_assignment_t;
 
-static const uint8_t nodes[] = {1, 2, 3};
+static const uint8_t nodes[] = {1, 2};
 static const uint8_t dnni_nodes[] = {1, 2};
 
 static message_assignment_t message_assignment[] = {
@@ -20,7 +20,7 @@ static message_assignment_t message_assignment[] = {
 #define MX_PAYLOAD_SIZE 13
 #define MX_ROUND_LENGTH 150
 #define MX_SLOT_LENGTH GPI_TICK_US_TO_HYBRID2(335)
-#define ROUND_LENGTH_MS                 ((150*MX_SLOT_LENGTH / (GPI_HYBRID_CLOCK_RATE / 1000000)) / 1000 + 300)
+#define ROUND_LENGTH_MS            ((150*MX_SLOT_LENGTH / (GPI_HYBRID_CLOCK_RATE / 1000000)) / 1000 + 300)
 #define MX_GENERATION_SIZE 46
 
 #endif /* INC_DNNI_CONFIG_H */
