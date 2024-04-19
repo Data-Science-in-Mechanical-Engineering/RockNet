@@ -3,7 +3,11 @@
 
 static uint8_t node_idx=-1u;
 
-static uint8_t 
+static uint8_t full_flags[AGGREGATE_FLAGS_SIZE];
+
+static float *content;
+
+static aggregate_field_t aggregate;
 
 void init_agg(uint8_t id)
 {
@@ -13,11 +17,34 @@ void init_agg(uint8_t id)
       break;
     }
   }
+
+  // calculate how the flags look like, if they are full (esentially all 1 except the last one, which is only 1 at corresponding device indexes)
+  for (uint8_t i = 0; i < AGGREGATE_FLAGS_SIZE; i++) {
+    if (i*8 < NUM_ELEMENTS(nodes)) {
+      full_flags[i] = 255;
+    } else {
+      full_flags[i] = 0;
+      for (uint8_t j = 0; j < NUM_ELEMENTS(nodes)%8; j++) {
+        full_flags[i] |= 1<<j;
+      }
+    }
+  }
+
 }
 
 unsigned int all_flags_in_agg(uint8_t *agg)
 {
-  
+  for (uint8_t i = 0; i < AGGREGATE_FLAGS_SIZE; i++) {
+    if (agg[i] != full_flags[i]) {
+      return 0;
+    }
+  }
+  return 1;
+}
+
+
+void set_content_agg(float *c) {
+  content = c;
 }
 
 //**************************************************************************************************

@@ -1810,7 +1810,7 @@ void mixer_transport_print_config(void)
 			) * 1.0003)));
 		#endif
         printf("%-25s = %" PRIu32 "\n", "round length ms", ROUND_LENGTH_MS);
-
+        printf("%u\r\n", AGGREGATE_SIZE);
 	#undef PRINT
 }
 

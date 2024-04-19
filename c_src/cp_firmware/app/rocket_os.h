@@ -51,6 +51,12 @@
 #include "cp_os.h"
 #include <stdint.h>
 
+typedef enum training_state_t_tag {
+  TRAINING,
+  EVALUATION,
+  IDLE
+} training_state_t;
+
 void run_rocket_os(uint8_t id);
 
 #endif

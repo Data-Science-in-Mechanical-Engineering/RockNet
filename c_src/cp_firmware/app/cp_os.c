@@ -34,6 +34,8 @@ void init_cp_os(uint8_t (*communication_finished_callback_p)(ap_message_t*, uint
     if (nodes[node_id] == TOS_NODE_ID)
             break;
   }
+
+  init_agg(id);
 }
             
 
@@ -42,6 +44,7 @@ void run()
   ap_message_t ap_pkt;
   message_layer_init();
   printf("Messagelayer init\r\n");
+
   round_nr = 1;
   // t_ref for first round is now (-> start as soon as possible)
   t_ref = gpi_tick_hybrid();
@@ -116,9 +119,9 @@ void run_rounds(uint8_t (*communication_finished_callback)(ap_message_t*, uint16
     ticks_start = gpi_tick_hybrid_to_us(ticks_start);
     
     if (TOS_NODE_ID != 1) {
-      printf("i: %u\n", ticks_start);
-      printf("m: %u\n", messages_received_idx - 1);
-      printf("%u\r\n", ROUND_LENGTH_MS);
+      //printf("i: %u\n", ticks_start);
+      //printf("m: %u\n", messages_received_idx - 1);
+      //printf("%u\r\n", ROUND_LENGTH_MS);
     }
 
     // toggle pin
@@ -149,7 +152,7 @@ void run_rounds(uint8_t (*communication_finished_callback)(ap_message_t*, uint16
     ticks_start = gpi_tick_hybrid() - ticks_start;
     ticks_start = gpi_tick_hybrid_to_us(ticks_start);
     if (TOS_NODE_ID != 1) {
-      printf("c: %u\n", ticks_start);
+      //printf("c: %u\n", ticks_start);
     }
     ticks_start = gpi_tick_hybrid();
     SET_COM_LED();

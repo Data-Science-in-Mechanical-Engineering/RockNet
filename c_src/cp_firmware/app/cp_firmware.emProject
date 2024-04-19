@@ -100,6 +100,7 @@
       <file file_name="linear_classifier.c" />
       <file file_name="rocket_os.c" />
       <file file_name="rocket_os.h" />
+      <file file_name="rocket_mixer_config.c" />
     </folder>
     <folder Name="System Files">
       <file file_name="thumb_crt0.s" />

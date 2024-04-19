@@ -1,5 +1,6 @@
 #include "linear_classifier.h"
 #include "rocket_config.h"
+#include "rocket_mixer_config.h"
 #include "conv.h"
 
 #include <math.h>
@@ -48,43 +49,26 @@ static float sum_of_gradients_bias[NUM_CLASSES] = {0};
 
 static float out_softmax[NUM_CLASSES];
 
-#define MINIMUM(a,b) \
-   ({ __typeof__ (a) _a = (a); \
-       __typeof__ (b) _b = (b); \
-     _a < _b ? _a : _b; })
-
-#define BATCH_SIZE MINIMUM(100, NUM_TIMESERIES)
-
 static float accuracy_filtered = 0;
 static const float gamma = 0.01;
 
-extern uint16_t __attribute__((section(".data")))	TOS_NODE_ID;
-
 static uint32_t t = 1;
+
+uint8_t rocket_node_idx = 0;
+
 
 void classify_part(const time_series_type_t *in, float *out)
 {
     // this is different than the central implementation. here we calculate the features assigned to our device.
     conv_multiple(in, features, get_kernels(), NUM_KERNELS, get_dilations(), NUM_DILATIONS, get_biases(), NUM_BIASES_PER_KERNEL);
-    //printf("feature: %d\r\n", (int) (features[0]*100));
 
     float temp = 0;
-    int i = -1;
     for (uint32_t row_weight = 0; row_weight < NUM_CLASSES; row_weight++) {
       out[row_weight] = 0;
-      for (uint32_t col_weight = 0; col_weight < DEVICE_NUM_FEATURES; col_weight++) {
-          out[row_weight] += features[col_weight] * weight[row_weight*DEVICE_NUM_FEATURES + col_weight];
-          //printf("%d\r\n", row_weight*DEVICE_NUM_FEATURES + col_weight);
-          if (i +1 != row_weight*DEVICE_NUM_FEATURES + col_weight) {
-            printf("hhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhh");
-          }
-          i = row_weight*DEVICE_NUM_FEATURES + col_weight;
+      for (uint32_t col_weight = 0; col_weight < devices_num_features[rocket_node_idx]; col_weight++) {
+          out[row_weight] += features[col_weight] * weight[row_weight*devices_num_features[rocket_node_idx] + col_weight];
       }
       out[row_weight] += bias[row_weight];
-      //printf("%d\r\n", (int) (out[row_weight]*100));
-      //printf("bias: %d\r\n", (int) (bias[row_weight]*100));
-      //printf("w1: %d\r\n", (int) (weight[0*DEVICE_NUM_FEATURES + 0]*100));
-      //printf("w2: %d\r\n", (int) (weight[1*DEVICE_NUM_FEATURES + 0]*100));
     }
 }
 
@@ -104,7 +88,7 @@ static float calculate_sum(float *in, uint16_t length)
   return result;
 }
 
-static uint8_t get_max_idx(float *in, uint8_t length)
+uint8_t get_max_idx(float *in, uint8_t length)
 {
     uint8_t best_idx = 0;
     float best_val = in[0];
@@ -114,7 +98,6 @@ static uint8_t get_max_idx(float *in, uint8_t length)
         best_idx = i;
       }
     }
-    // printf("best_idx: %u\r\n", best_idx);
     return best_idx;
 }
 
@@ -128,17 +111,15 @@ static void get_softmax(float *in, float *out)
   }
 }
 
-static uint8_t train_step(float *out_pred, uint8_t idx_class)
+uint8_t calculate_and_accumulate_gradient(float *out_pred, uint8_t idx_class)
 {   
-    //printf("1. %d, %d, %u\r\n", (int) (out_pred[0]*100), (int) (out_pred[1]*100), idx_class);
     get_softmax(out_pred, out_softmax);
-    // printf("1. %d, %d, %u\r\n", (int) (out_softmax[0]*100), (int) (out_softmax[1]*100), idx_class);
 
     float temp = 0;
 
     for (uint32_t row_weight = 0; row_weight < NUM_CLASSES; row_weight++) {
       // calculate derivative of weights
-      for (uint32_t col_weight = 0; col_weight < DEVICE_NUM_FEATURES; col_weight++) {
+      for (uint32_t col_weight = 0; col_weight < devices_num_features[rocket_node_idx]; col_weight++) {
           // standard formula for derivative of cross entropy + softmax
           temp = out_softmax[row_weight];
 
@@ -149,7 +130,7 @@ static uint8_t train_step(float *out_pred, uint8_t idx_class)
 
           temp *= features[col_weight];
 
-          d_weight[row_weight*DEVICE_NUM_FEATURES + col_weight] += temp;
+          d_weight[row_weight*devices_num_features[rocket_node_idx] + col_weight] += temp;
       }
          
       // calculate derivative of bias
@@ -160,8 +141,6 @@ static uint8_t train_step(float *out_pred, uint8_t idx_class)
       }
       d_bias[row_weight] += temp;
     }
-
-    printf("%d, %d, %u\r\n", (int) (out_softmax[0]*10000), (int) (out_softmax[1]*10000), idx_class);
 
     // calculate if prediction is correct
     return (get_max_idx(out_softmax, NUM_CLASSES) == idx_class);
@@ -178,75 +157,72 @@ static inline float float_max(float f1, float f2)
 }
 
 
-void update_weights(float *out_pred, uint8_t idx_class, uint32_t round_nmbr)
+void update_weights()
 {
-    accuracy_filtered = gamma*train_step(out_pred, idx_class) + (1 - gamma) * accuracy_filtered;
-    if (round_nmbr % BATCH_SIZE == BATCH_SIZE - 1) {
-        //printf("weight: %d\r\n", (int) (d_weight[0]*10000));
-        #ifndef PARAMETERLESS
-        float beta_1_pow = powf(BETA_1, t);
-        float beta_2_pow = powf(BETA_2, t);
-        #endif
-        for (uint32_t row_weight = 0; row_weight < NUM_CLASSES; row_weight++) {
-          for (uint32_t col_weight = 0; col_weight < DEVICE_NUM_FEATURES; col_weight++) {
-              uint32_t i = row_weight*DEVICE_NUM_FEATURES + col_weight;
-              d_weight[i] /= BATCH_SIZE;
-              d_weight[i] += WEIGHT_DECAY * weight[i];
-              #ifndef PARAMETERLESS
-
-              m_t_weight[i] = BETA_1 * m_t_weight[i] + (1 - BETA_1) * d_weight[i];
-              v_t_weight[i] = BETA_2 * v_t_weight[i] + (1 - BETA_2) * d_weight[i] * d_weight[i];
-              float mt_hat = m_t_weight[i] / (1 - beta_1_pow);
-              float vt_hat = v_t_weight[i] / (1 - beta_2_pow);
-              weight[i] -= LEARNING_RATE * mt_hat / (sqrtf(vt_hat) + EPSILON);  //d_weight[i]; // 
-              
-              #else
-
-              d_weight[i] = -d_weight[i];
-              l_i[i] = float_max(l_i[i], float_abs(d_weight[i]));
-              g_i[i] = g_i[i] + float_abs(d_weight[i]);
-              reward[i] = float_max(reward[i] + weight[i]*d_weight[i], 0);
-              sum_of_gradients[i] += d_weight[i];
-              //printf("%f\n", d_weight[i]);
-              weight[i] = sum_of_gradients[i] / (l_i[i]*float_max(g_i[i]+l_i[i], 100*l_i[i]) + 1e-7) * (l_i[i] + reward[i]);  
-              
-              #endif
-
-              d_weight[i] = 0;
-          }
-          d_bias[row_weight] /= BATCH_SIZE;
-          d_bias[row_weight] += WEIGHT_DECAY * d_bias[row_weight];
-
+    #ifndef PARAMETERLESS
+    float beta_1_pow = powf(BETA_1, t);
+    float beta_2_pow = powf(BETA_2, t);
+    #endif
+    for (uint32_t row_weight = 0; row_weight < NUM_CLASSES; row_weight++) {
+      for (uint32_t col_weight = 0; col_weight < devices_num_features[rocket_node_idx]; col_weight++) {
+          uint32_t i = row_weight*devices_num_features[rocket_node_idx] + col_weight;
+          d_weight[i] /= BATCH_SIZE;
+          d_weight[i] += WEIGHT_DECAY * weight[i];
           #ifndef PARAMETERLESS
-          m_t_bias[row_weight] = BETA_1 * m_t_bias[row_weight] + (1 - BETA_1) * d_bias[row_weight];
-          v_t_bias[row_weight] = BETA_2 * v_t_bias[row_weight] + (1 - BETA_2) * d_bias[row_weight] * d_bias[row_weight];
 
-          float mt_hat = m_t_bias[row_weight] / (1 - beta_1_pow);
-          float vt_hat = v_t_bias[row_weight] / (1 - beta_2_pow);
-          bias[row_weight] -= LEARNING_RATE * mt_hat / (sqrtf(vt_hat) + EPSILON);
-
+          m_t_weight[i] = BETA_1 * m_t_weight[i] + (1 - BETA_1) * d_weight[i];
+          v_t_weight[i] = BETA_2 * v_t_weight[i] + (1 - BETA_2) * d_weight[i] * d_weight[i];
+          float mt_hat = m_t_weight[i] / (1 - beta_1_pow);
+          float vt_hat = v_t_weight[i] / (1 - beta_2_pow);
+          weight[i] -= LEARNING_RATE * mt_hat / (sqrtf(vt_hat) + EPSILON);  //d_weight[i]; // 
+          
           #else
-          d_bias[row_weight] = -d_bias[row_weight];
-          l_i_bias[row_weight] = float_max(l_i_bias[row_weight], float_abs(d_bias[row_weight]));
-          g_i_bias[row_weight] = g_i_bias[row_weight] + float_abs(d_bias[row_weight]);
-          reward_bias[row_weight] = float_max(reward_bias[row_weight] + bias[row_weight]*d_bias[row_weight], 0);
-          sum_of_gradients_bias[row_weight] += d_bias[row_weight];
-          bias[row_weight] = sum_of_gradients_bias[row_weight] / (l_i_bias[row_weight]*float_max(g_i_bias[row_weight]+l_i_bias[row_weight], 100*l_i_bias[row_weight]) + 1e-7) * (l_i_bias[row_weight] + reward_bias[row_weight]);
+
+          d_weight[i] = -d_weight[i];
+          l_i[i] = float_max(l_i[i], float_abs(d_weight[i]));
+          g_i[i] = g_i[i] + float_abs(d_weight[i]);
+          reward[i] = float_max(reward[i] + weight[i]*d_weight[i], 0);
+          sum_of_gradients[i] += d_weight[i];
+          weight[i] = sum_of_gradients[i] / (l_i[i]*float_max(g_i[i]+l_i[i], 100*l_i[i]) + 1e-7) * (l_i[i] + reward[i]);  
+          
           #endif
-          d_bias[row_weight] = 0;
-          if (TOS_NODE_ID != 1) {
-            bias[row_weight] = 0;
-          }
-        }
-        t++;
-        printf("weight: %d\r\n", (int) (weight[0]*10000));
-        printf("Epoch: %u, Accuracy: %u\n", (uint32_t) round_nmbr, (uint32_t) (accuracy_filtered*100));
+
+          d_weight[i] = 0;
+      }
+      d_bias[row_weight] /= BATCH_SIZE;
+      d_bias[row_weight] += WEIGHT_DECAY * d_bias[row_weight];
+
+      #ifndef PARAMETERLESS
+      m_t_bias[row_weight] = BETA_1 * m_t_bias[row_weight] + (1 - BETA_1) * d_bias[row_weight];
+      v_t_bias[row_weight] = BETA_2 * v_t_bias[row_weight] + (1 - BETA_2) * d_bias[row_weight] * d_bias[row_weight];
+
+      float mt_hat = m_t_bias[row_weight] / (1 - beta_1_pow);
+      float vt_hat = v_t_bias[row_weight] / (1 - beta_2_pow);
+      bias[row_weight] -= LEARNING_RATE * mt_hat / (sqrtf(vt_hat) + EPSILON);
+
+      #else
+      d_bias[row_weight] = -d_bias[row_weight];
+      l_i_bias[row_weight] = float_max(l_i_bias[row_weight], float_abs(d_bias[row_weight]));
+      g_i_bias[row_weight] = g_i_bias[row_weight] + float_abs(d_bias[row_weight]);
+      reward_bias[row_weight] = float_max(reward_bias[row_weight] + bias[row_weight]*d_bias[row_weight], 0);
+      sum_of_gradients_bias[row_weight] += d_bias[row_weight];
+      bias[row_weight] = sum_of_gradients_bias[row_weight] / (l_i_bias[row_weight]*float_max(g_i_bias[row_weight]+l_i_bias[row_weight], 100*l_i_bias[row_weight]) + 1e-7) * (l_i_bias[row_weight] + reward_bias[row_weight]);
+      #endif
+      d_bias[row_weight] = 0;
+      if (rocket_node_idx != 0) {
+        bias[row_weight] = 0;
+      }
     }
+    t++;
 }
 
-void init_linear_classifier()
+void init_linear_classifier(uint8_t id)
 {
-  for (uint32_t i = 0; i < NUM_CLASSES*DEVICE_NUM_FEATURES; i++) {
-    weight[i] = 2 * random_numbers[i%1000] / sqrtf(DEVICE_NUM_FEATURES + NUM_CLASSES);
+
+  
+  rocket_node_idx = get_rocket_node_idx(id);
+
+  for (uint32_t i = 0; i < NUM_CLASSES*devices_num_features[rocket_node_idx]; i++) {
+    weight[i] = 2 * random_numbers[i%1000] / sqrtf(devices_num_features[rocket_node_idx] + NUM_CLASSES);
   }
 }

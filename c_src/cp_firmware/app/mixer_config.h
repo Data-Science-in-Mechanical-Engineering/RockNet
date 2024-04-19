@@ -32,7 +32,7 @@
 // Values mentioned in the manual (nRF52840_PS_v1.1):
 // +8dBm,  +7dBm,  +6dBm,  +5dBm,  +4dBm,  +3dBm, + 2dBm,
 //  0dBm,  -4dBm,  -8dBm, -12dBm, -16dBm, -20dBm, -40dBm
-#define MX_TX_PWR_DBM			-12
+#define MX_TX_PWR_DBM			8
 
 
 /*****************************************************************************/

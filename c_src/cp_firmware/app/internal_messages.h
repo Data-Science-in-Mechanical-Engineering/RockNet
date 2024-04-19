@@ -80,6 +80,7 @@ typedef struct __attribute__((packed)) time_series_message_t_tag
         message_t header;
         time_series_type_t data[LENGTH_TIME_SERIES];
         uint8_t label;
+        uint8_t training;
 } time_series_message_t;
 
 typedef struct __attribute__((packed)) classification_message_t_tag

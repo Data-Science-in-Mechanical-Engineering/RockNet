@@ -577,8 +577,8 @@ int main()
 
     //train();
     
-    for (int i = 0; i < NUM_ELEMENTS(dnni_nodes); i++) {
-      if (TOS_NODE_ID == dnni_nodes[i]) {
+    for (int i = 0; i < NUM_ELEMENTS(rocket_nodes); i++) {
+      if (TOS_NODE_ID == rocket_nodes[i]) {
 
         /*while (TOS_NODE_ID != DEVICE_ID) {
           NRF_P0->OUTSET = BV(25);
