@@ -25,6 +25,10 @@ void message_layer_init()
     message_assignment[i].size_end = message_assignment[i].size - (num_mixer_messages-1)*MX_PAYLOAD_SIZE;
     idx += num_mixer_messages;  // the number of mixer messages is the rounded up number
     message_assignment[i].mixer_assignment_end = idx;
+    printf("num_mixer_messages: %u\r\n", num_mixer_messages);
+    printf("start: %u\r\n", message_assignment[i].mixer_assignment_start);
+    printf("end: %u\r\n", message_assignment[i].mixer_assignment_end);
+    printf("size_end: %u\r\n", message_assignment[i].size_end);
   }
   
   if (message_assignment[NUM_ELEMENTS(message_assignment)-1].mixer_assignment_end > MX_GENERATION_SIZE) {
@@ -48,6 +52,7 @@ uint8_t read_message_from_mixer(uint8_t mixer_idx, uint8_t *msg_p, uint16_t size
   } else if ((void*)-1 == p) {
     return 0;
   } 
+  //printf("size: %u, %u\r\n", size, ((uint8_t *) p)[0]);
   memcpy((void *) msg_p, p, size);
   return 1;
 }
@@ -73,6 +78,7 @@ uint8_t message_layer_get_message(uint8_t id, uint8_t *msg)
     return 0;
   }
   for (uint16_t i = 0; i < message_assignment[idx].mixer_assignment_end - message_assignment[idx].mixer_assignment_start - 1; i++) {
+    //printf("%u\r\n", i);
     uint8_t succ = read_message_from_mixer(i + message_assignment[idx].mixer_assignment_start, msg + i*MX_PAYLOAD_SIZE, MX_PAYLOAD_SIZE);
     if (!succ) {
       return 0;
@@ -98,6 +104,7 @@ uint8_t message_layer_set_message(uint8_t id, uint8_t *message)
 
   for (uint16_t i = 0; i < message_assignment[idx].mixer_assignment_end - message_assignment[idx].mixer_assignment_start; i++) {
     mixer_write(i + message_assignment[idx].mixer_assignment_start, message + i*MX_PAYLOAD_SIZE, MX_PAYLOAD_SIZE);
+    //printf("%u, %u\r\n",(message + i*MX_PAYLOAD_SIZE)[0], i);
   }
   return 1;
 }

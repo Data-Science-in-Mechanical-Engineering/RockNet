@@ -1,3 +1,6 @@
+import copy
+from pathlib import Path
+
 import numpy as np
 from sympy.utilities.iterables import multiset_permutations
 import math
@@ -186,6 +189,8 @@ def generate_code(dataset, kernels, dilations, num_biases_per_kernel, quantiles)
 	template_rocket_config_h = jinja_environment.get_template('rocket_config.h.jinja')
 	template_rocket_config_c = jinja_environment.get_template('rocket_config.c.jinja')
 
+	num_classes = int(round(max(dataset[1])))
+
 	template_values = {
 		'length_time_series': len(dataset[0][0]),
 		'num_time_series': len(dataset[0]),
@@ -193,11 +198,11 @@ def generate_code(dataset, kernels, dilations, num_biases_per_kernel, quantiles)
 		'num_dilations': len(dilations),
 		'num_biases_per_kernel': num_biases_per_kernel,
 		'timeseries_data': [generate_matrix_code(m, use_float=True) for m in dataset[0]],
-		'labels': generate_matrix_code(dataset[1], use_float=True),
+		'labels': generate_matrix_code(dataset[1]-1, use_float=False),
 		'kernels': generate_matrix_code(kernels, use_float=False),
 		'dilations': generate_matrix_code(dilations, use_float=False),
 		'quantiles': generate_matrix_code(quantiles, use_float=True),
-		'devices_num_features': generate_matrix_code(),
+		"num_classes": num_classes
 	}
 
 	output = template_rocket_config_h.render(template_values)
@@ -236,11 +241,11 @@ def generate_data(len_timeseries):
 	label = np.ones((num_data,))
 	for i in range(num_data // 2):
 		data[i, :] = np.sin(np.array([j/len_timeseries * 15 * np.pi for j in range(len_timeseries)]) + np.random.randn(1)*np.pi)
-		label[i] = 1.0
+		label[i] = 1
 
 	for i in range(num_data // 2, num_data):
 		data[i, :] = np.sin(np.array([j/len_timeseries * 14 * np.pi for j in range(len_timeseries)]) + np.random.randn(1)*np.pi)
-		label[i] = -1.0
+		label[i] = 2
 
 	"""data[0:50, :] = np.random.randn(50, len_timeseries) * 0.9
 	label = np.ones((len(data),))
@@ -254,12 +259,48 @@ def generate_data(len_timeseries):
 	return data, label
 
 
+def load_ucr_dataset(name, test=False):
+	data = copy.deepcopy(
+		pd.read_csv(f"{Path.home()}/datasets/{name}/{name}_{'TRAIN' if not test else 'TEST'}.tsv", sep="\t",
+					header=None))
+
+	# remove NANs by interpolation
+	data = data.interpolate(axis=1)
+
+	X = np.array(data[data.columns[1:]])
+	y = np.array(data[data.columns[0]])
+
+	# shuffle data
+	shuffle_vec = np.array([i for i in range(len(y))])
+	np.random.shuffle(shuffle_vec)
+
+	X = X[shuffle_vec, :]
+	X -= np.mean(X)
+	X /= np.std(X)
+	y = y[shuffle_vec]
+
+	return np.array(X, dtype=np.float32), np.array(y, dtype=np.int64)
+
+
+def generate_data_ucr(num_trajectories, name_dataset):
+	X_train, y_train = load_ucr_dataset(name_dataset)
+
+	num_trajectories = min(num_trajectories, len(X_train))
+
+	return (np.array(X_train[0:num_trajectories], dtype=np.float32),
+			np.array(y_train[0:num_trajectories], dtype=np.int64))
+
 if __name__ == "__main__":
 	len_timeseries = 101
+	num_nodes = 2
+	quantize = False
 
-	data, labels = generate_data(len_timeseries)
+	#ädata, labels = generate_data(len_timeseries, quantize)
+
+	data, labels = generate_data_ucr(num_trajectories=1000, name_dataset="ECGFiveDays")
 
 	len_timeseries = len(data[0])
+
 
 	dilations = generate_dilations(len_timeseries)
 	kernels = generate_kernels()

@@ -5,8 +5,10 @@
 #include <stdio.h>
 #include <math.h>
 
-float classify(float *in);
+void classify_part(const float *in, float *out);
 
-void train();
+void update_weights(float *out_pred, uint8_t idx_class, uint32_t round_nmbr);
+
+void init_linear_classifier();
 
 #endif

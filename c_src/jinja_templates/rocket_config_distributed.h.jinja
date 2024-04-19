@@ -19,11 +19,15 @@ static uint16_t devices_kernels_idx[] = {{devices_kernels_idx}};
 
 static uint16_t devices_num_features[] = {{devices_num_features}};
 
+#define DEVICE_NUM_FEATURES (devices_num_features[TOS_NODE_ID-1])
+
+#define NUM_CLASSES ({{num_classes}})
+
 void init_rocket();
 
 const time_series_type_t const **get_timeseries();
 
-const float *get_labels();
+const uint8_t *get_labels();
 
 const uint16_t *get_kernels();
 

@@ -11,19 +11,27 @@
 
 #define NUM_TIMESERIES ({{num_time_series}})
 
-static uint16_t devices_num_features[] = {{devices_num_features}}
+#define MAX_FEATURES_PER_DEVICE ({{max_features_per_device}})
+
+typedef {{time_series_type_t}} time_series_type_t;
+
+#define DEVICE_NUM_FEATURES (NUM_FEATURES)
+
+#define MAX_FEATURES_PER_DEVICE (NUM_FEATURES)
+
+#define NUM_CLASSES ({{num_classes}})
 
 void init_rocket();
 
-float **get_timeseries();
+const time_series_type_t const **get_timeseries();
 
-float *get_labels();
+const uint8_t *get_labels();
 
-uint16_t *get_kernels();
+const uint16_t *get_kernels();
 
-uint32_t *get_dilations();
+const uint32_t *get_dilations();
 
-float *get_quantiles();
+const float *get_quantiles();
 
 float *get_biases();
 

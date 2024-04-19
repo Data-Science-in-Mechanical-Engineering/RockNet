@@ -30,7 +30,7 @@ def get_logger_name(dataset_name, use_cocob, learning_rate=None):
 
 def init(layer):
     if isinstance(layer, nn.Linear):
-        nn.init.constant_(layer.weight.data, 0)
+        torch.nn.init.xavier_uniform(layer.weight)
         nn.init.constant_(layer.bias.data, 0)
 
 

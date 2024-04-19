@@ -7,8 +7,10 @@
 
 #include "rocket_config.h"
 
-float classify_part(const time_series_type_t *in);
+void classify_part(const time_series_type_t *in, float *out);
 
-void update_weights(float out_pred, float out, uint32_t round_nmbr);
+void update_weights(float *out_pred, uint8_t idx_class, uint32_t round_nmbr);
+
+void init_linear_classifier();
 
 #endif

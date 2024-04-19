@@ -3,25 +3,35 @@
 
 #include <stdint.h>
 
-#define LENGTH_TIME_SERIES (101)
+#define LENGTH_TIME_SERIES (136)
 #define NUM_KERNELS (84)
-#define NUM_DILATIONS (4)
-#define NUM_BIASES_PER_KERNEL (29)
+#define NUM_DILATIONS (5)
+#define NUM_BIASES_PER_KERNEL (23)
 #define NUM_FEATURES (NUM_KERNELS * NUM_DILATIONS * NUM_BIASES_PER_KERNEL)
 
-#define NUM_TIMESERIES (1000)
+#define NUM_TIMESERIES (23)
+
+#define MAX_FEATURES_PER_DEVICE ()
+
+typedef  time_series_type_t;
+
+#define DEVICE_NUM_FEATURES (NUM_FEATURES)
+
+#define MAX_FEATURES_PER_DEVICE (NUM_FEATURES)
+
+#define NUM_CLASSES (2)
 
 void init_rocket();
 
-float **get_timeseries();
+const time_series_type_t const **get_timeseries();
 
-float *get_labels();
+const uint8_t *get_labels();
 
-uint16_t *get_kernels();
+const uint16_t *get_kernels();
 
-uint32_t *get_dilations();
+const uint32_t *get_dilations();
 
-float *get_quantiles();
+const float *get_quantiles();
 
 float *get_biases();
 

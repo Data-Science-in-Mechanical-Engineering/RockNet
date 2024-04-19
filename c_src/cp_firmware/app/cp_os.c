@@ -143,9 +143,16 @@ void run_rounds(uint8_t (*communication_finished_callback)(ap_message_t*, uint16
       // when the agent does not want to send anything, it sends a TYPE_DUMMY
       if (tx_messages[tx_message_idx]->header.type != TYPE_DUMMY) {
         // the id of the message in the message layer is written in the header.
-        message_layer_set_message(tx_messages[tx_message_idx]->header.id, (uint8_t *) tx_messages[tx_message_idx]);
+        //message_layer_set_message(tx_messages[tx_message_idx]->header.id, (uint8_t *) tx_messages[tx_message_idx]);
       }
     }
+
+    for (uint16_t tx_message_idx = MX_GENERATION_SIZE-1; tx_message_idx >0; tx_message_idx--) {
+      uint8_t a = 1;
+      mixer_write(tx_message_idx, &a, MX_PAYLOAD_SIZE);
+      printf("tx: %u, %u\r\n", tx_message_idx, (&a)[0]);
+    }
+
     // arm mixer
     // start first round with infinite scan
     // -> nodes join next available round, does not require simultaneous boot-up
@@ -156,9 +163,11 @@ void run_rounds(uint8_t (*communication_finished_callback)(ap_message_t*, uint16
     CLR_COM_LED();
     ticks_start = gpi_tick_hybrid() - ticks_start;
     ticks_start = gpi_tick_hybrid_to_us(ticks_start);
+    
     if (TOS_NODE_ID != 1) {
       printf("i: %u\n", ticks_start);
       printf("m: %u\n", messages_received_idx - 1);
+      printf("%u\r\n", ROUND_LENGTH_MS);
     }
 
     // toggle pin
@@ -188,6 +197,7 @@ void run_rounds(uint8_t (*communication_finished_callback)(ap_message_t*, uint16
     CLR_COM_LED();
     ticks_start = gpi_tick_hybrid();
     t_ref = mixer_start();
+
     // sometimes communication ends a bit earlier, when agent has received everything and its neightbours too.
     while (gpi_tick_compare_hybrid(gpi_tick_hybrid(), SYNC_OFFSET(t_ref)) < 0);
     ticks_start = gpi_tick_hybrid() - ticks_start;
@@ -209,8 +219,22 @@ void run_rounds(uint8_t (*communication_finished_callback)(ap_message_t*, uint16
     messages_received_idx = 0;
     for (uint16_t i = 0; i < NUM_ELEMENTS(message_assignment); i++) {
       // write data in array, when message was received
-      messages_received_idx += message_layer_get_message(message_assignment[i].id, (uint8_t *) &mixer_messages_received[messages_received_idx]);
+      //messages_received_idx += message_layer_get_message(message_assignment[i].id, (uint8_t *) &mixer_messages_received[messages_received_idx]);
     }
+        
+    mixer_print_statistics();
+    for (uint16_t tx_message_idx = 1; tx_message_idx < MX_GENERATION_SIZE; tx_message_idx++) {
+        void *p = mixer_read(tx_message_idx);
+
+        // check if message was received. Return 0 if not.
+        if (NULL == p) {
+          continue;
+        } else if ((void*)-1 == p) {
+          continue;
+        } 
+        printf("rx: %u:  %u\r\n", tx_message_idx, ((uint8_t *) p)[0]);
+    }
+
     // synchronize to the initiator node
     init_message_t init_message;
     uint8_t succ = read_message_from_mixer(0, (uint8_t *) &init_message, sizeof(init_message_t));

@@ -8,7 +8,7 @@ static time_series_type_t const *timeseries[NUM_TIMESERIES];
 static const time_series_type_t timeseries_data{{loop.index}}[] = {{ tsdata }};
 {% endfor %}
 
-static const float labels[] = {{labels}};
+static const uint8_t labels[] = {{labels}};
 
 static const uint16_t kernels[] = {{kernels}};
 static const uint32_t dilations[] = {{dilations}};
@@ -34,7 +34,7 @@ const time_series_type_t const **get_timeseries()
     return timeseries;
 }
 
-const float *get_labels()
+const uint8_t *get_labels()
 {
     return labels;
 }

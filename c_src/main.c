@@ -13,5 +13,6 @@ int main()
         printf("%f\n", get_biases()[i]);
     }
 
+    init_linear_classifier();
     train();
 }

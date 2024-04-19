@@ -566,20 +566,20 @@ int main()
     init_rocket();
     //while(1){}
 
-    float a = 0;
-    float label = 0;
+    /*float a[NUM_CLASSES];
+    uint8_t label = 0;
     int current_ts_idx = 0;
     // central learning
     if (NUM_ELEMENTS(dnni_nodes) == 1) {
       for (uint32_t i = 0; i < 100000; i++) {
         current_ts_idx = i%NUM_TIMESERIES;
-        label = get_labels()[i%NUM_TIMESERIES];
-        a = classify_part(get_timeseries()[current_ts_idx]);
+        label = get_labels()[current_ts_idx];
+        classify_part(get_timeseries()[current_ts_idx], a);
         update_weights(a, label, i+2);
         //current_ts_idx = i%NUM_TIMESERIES;
         //label = get_labels()[i%NUM_TIMESERIES];
       }
-    }
+    }*/
 
     //train();
     
