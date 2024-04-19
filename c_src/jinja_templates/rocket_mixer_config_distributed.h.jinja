@@ -10,20 +10,18 @@ typedef struct message_assignment_t_tag
 	uint16_t size_end; // the size of the piece of the message in the mixer message at index mixer_assignment_end-1
 } message_assignment_t;
 
-static const uint8_t nodes[] = {  1,  2,  3, };
-static const uint8_t dnni_nodes[] = {  1,  2, };
+static const uint8_t nodes[] = { {% for node in nodes %} {{node}}, {% endfor %}};
+static const uint8_t dnni_nodes[] = { {% for dnni_node in dnni_nodes %} {{dnni_node}}, {% endfor %}};
 
 static message_assignment_t message_assignment[] = {
- {.id=254, .size=547},
- {.id=1, .size=10},
- {.id=2, .size=10},
- };
+{% for id in message_ids %} {.id={{id}}, .size={{message_sizes[loop.index0]}}},
+{% endfor %} };
 
-#define MX_PAYLOAD_SIZE 13
-#define MX_ROUND_LENGTH 150
-#define MX_SLOT_LENGTH GPI_TICK_US_TO_HYBRID2(335)
-#define ROUND_LENGTH_MS            ((150*MX_SLOT_LENGTH / (GPI_HYBRID_CLOCK_RATE / 1000000)) / 1000 + 300)
-#define MX_GENERATION_SIZE 46
+#define MX_PAYLOAD_SIZE {{mx_payload_size}}
+#define MX_ROUND_LENGTH {{mx_round_length}}
+#define MX_SLOT_LENGTH GPI_TICK_US_TO_HYBRID2({{slot_length}})
+#define ROUND_LENGTH_MS            ((150*MX_SLOT_LENGTH / (GPI_HYBRID_CLOCK_RATE / 1000000)) / 1000 + {{calculation_duration}})
+#define MX_GENERATION_SIZE {{mx_generation_size}}
 
 #define AGGREGATE_FLAGS_SIZE (1)
 #define AGGREGATE_CONTENT_FLOAT_SIZE (1)

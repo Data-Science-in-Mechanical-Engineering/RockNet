@@ -67,9 +67,7 @@
  *                                        first parameter. Returns the size of messages to send.
  * @param id id of CP
  */
-void init_cp_os(uint16_t (*receive_data_from_AP)(ap_message_t **), 
-                void (*send_data_to_AP)(ap_message_t *, uint16_t), 
-                uint8_t (*communication_finished_callback)(ap_message_t*, uint16_t), 
+void init_cp_os(uint8_t (*communication_finished_callback)(ap_message_t*, uint16_t), 
                 uint16_t (*communication_starts_callback)(ap_message_t**),
                 uint8_t id);
 

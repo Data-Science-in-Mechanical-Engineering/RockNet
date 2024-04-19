@@ -6,43 +6,6 @@
 #include "gpi/clocks.h"
 #include "mixer_config.h"
 
-#define TURN_OFF_AGG
-
-#ifndef TURN_OFF_AGG
-#define CONTROL_MSGS_M_C					2
-#define PRIO_WIDTH							8
-#define NODE_ID_WIDTH						5
-#define AGGREGATE_CONTAINS_ALL_PRIORITIES	0
-#else
-#define CONTROL_MSGS_M_C					0
-#define PRIO_WIDTH							0
-#define NODE_ID_WIDTH						0
-#define AGGREGATE_CONTAINS_ALL_PRIORITIES	0
-#endif
-
-#ifndef TURN_OFF_AGG
-ASSERT_CT_STATIC(NUM_PLANTS <= ((1 << NODE_ID_WIDTH) - 1), NODE_ID_WIDTH_cannot_support_all_nodes);
-ASSERT_CT_STATIC(NODE_ID_WIDTH <= 8, NODE_ID_WIDTH_greater_8_is_not_implemented);
-#endif
-
-#ifndef TURN_OFF_AGG
-#define AGGREGATE_SIZE_M_C_PRIORITIES	((NUM_PLANTS + CONTROL_MSGS_M_C * PRIO_WIDTH + CONTROL_MSGS_M_C * NODE_ID_WIDTH + 7) / 8)
-#define AGGREGATE_SIZE_ALL_PRIORITIES	((NUM_PLANTS * PRIO_WIDTH + 7) / 8)
-#else
-#define AGGREGATE_SIZE_M_C_PRIORITIES	0
-#define AGGREGATE_SIZE_ALL_PRIORITIES	0
-#endif
-
-#if AGGREGATE_CONTAINS_ALL_PRIORITIES == 1
-	#error "NOT IMPLEMENTED"
-	#define AGGREGATE_SIZE	AGGREGATE_SIZE_ALL_PRIORITIES
-#else
-	#define AGGREGATE_SIZE	AGGREGATE_SIZE_M_C_PRIORITIES
-#endif
-
-typedef uint8_t priority_t;
-ASSERT_CT_STATIC(PRIO_WIDTH <= (sizeof(priority_t) * 8), prob_info_t_needs_to_implement_support_for_priority_widths_greater_8_bit);
-
 
 
 // The Bolt durations contain besides the actual SPI data transfer

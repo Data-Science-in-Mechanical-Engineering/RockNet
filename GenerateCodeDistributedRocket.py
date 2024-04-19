@@ -111,59 +111,55 @@ def generate_timing_configuration(message_size_list, num_devices, num_classes):
 	num_rounds = calculate_num_rounds(num_messages[best_ind])
 	num_messages_best = num_messages[best_ind]
 
-	# best_ind, best_time = get_min(round_times)
 	slot_length = round(slot_time) + 10  # plus 10 to have a bit of security gap
-	round_length = f"(({num_rounds}*MX_SLOT_LENGTH / (GPI_HYBRID_CLOCK_RATE / 1000000)) / 1000 + {int(280 * num_classes / num_devices) + 20})"
-	code = f"#define MX_PAYLOAD_SIZE {mixer_size}\n"
-	code += f"#define MX_ROUND_LENGTH {num_rounds}\n"
-	code += f"#define MX_SLOT_LENGTH GPI_TICK_US_TO_HYBRID2({slot_length})\n"
-	code += f"#define ROUND_LENGTH_MS                 {round_length}\n"
+	calculation_duration = int(280 * num_classes / num_devices) + 20
 
-	code += f"#define MX_GENERATION_SIZE {num_messages_best}\n"
-
-	return code
+	return mixer_size, num_rounds, slot_length, calculation_duration, num_messages_best
 
 
-def generate_rocket_mixer_config(code_path, num_devices, num_total_nodes, len_time_series, quantize, num_classes):
-	# generate code for nodes
-	code_dnni_config_h = "#ifndef INC_DNNI_CONFIG_H\n#define INC_DNNI_CONFIG_H\n"
-
-	code_dnni_config_h += "\ntypedef struct message_assignment_t_tag \n" \
-						  "{ \n" \
-						  "	uint8_t id;   // id of message slot \n" \
-						  "	uint16_t size;  // slot size in byte \n" \
-						  "	uint16_t mixer_assignment_start;  // the index in mixer, the message starts \n" \
-						  "	uint16_t mixer_assignment_end;   // the index in mixer the message ends (not including this index)\n" \
-						  "	uint16_t size_end; // the size of the piece of the message in the mixer message at index mixer_assignment_end-1 \n" \
-						  "} message_assignment_t;\n\n"
-
+def generate_rocket_mixer_config(num_devices, num_total_nodes, len_time_series, quantize, num_classes):
 	id_devices = [i + 1 for i in range(num_devices)]
 	id_relays = [i + num_devices + 1 for i in range(num_total_nodes - num_devices + 1)]
-	code_dnni_config_h += generate_node_array("nodes", id_devices + id_relays)
-	code_dnni_config_h += generate_node_array("dnni_nodes", id_devices)
 
 	header_message_size = 2
-	metadata_message_size = header_message_size + 2
 	timeseries_message_size = header_message_size + len_time_series * (4 if not quantize else 1) + 1
 	classification_message_size = header_message_size + 4 * num_classes
 
-	code_dnni_config_h += "\nstatic message_assignment_t message_assignment[] = {\n"
-	for idd in [254]:
-		code_dnni_config_h += f"	{{.id={idd}, .size={timeseries_message_size}}},\n "
-	for idd in id_devices:
-		code_dnni_config_h += f"	{{.id={idd}, .size={classification_message_size}}},\n "
-	code_dnni_config_h = code_dnni_config_h[0:-3]
-	code_dnni_config_h += "};\n"
+	message_ids = [254] + id_devices
+	message_sizes = [timeseries_message_size] + [classification_message_size] * len(id_devices)
 
-	# calculate timing configurations
+	mx_payload_size, mx_round_length, slot_length, calculation_duration, mx_generation_size = generate_timing_configuration(
+		message_size_list=[timeseries_message_size] + [classification_message_size] * len(id_devices),
+		num_devices=num_devices,
+		num_classes=num_classes)
+
+	mixer_config = {
+		"nodes": id_devices + id_relays,
+		"dnni_nodes": id_devices,
+		"message_ids": message_ids,
+		"message_sizes": message_sizes,
+		"mx_payload_size": mx_payload_size,
+		"mx_round_length": mx_round_length,
+		"slot_length": slot_length,
+		"calculation_duration": calculation_duration,
+		"mx_generation_size": mx_generation_size
+	}
+
+
+	"""# calculate timing configurations
 	code_dnni_config_h += generate_timing_configuration(
 		message_size_list=[timeseries_message_size] + [classification_message_size] * len(id_devices),
 		num_devices=num_devices,
 		num_classes=num_classes)
 
-	code_dnni_config_h += "\n#endif /* INC_DNNI_CONFIG_H */\n"
-	with open(f"{code_path}/rocket_mixer_config.h", 'w') as f:
-		f.write(code_dnni_config_h)
+	# calculate aggregate configurations
+	code_dnni_config_h += generate_timing_configuration(
+		message_size_list=[timeseries_message_size] + [classification_message_size] * len(id_devices),
+		num_devices=num_devices,
+		num_classes=num_classes)
+
+	code_dnni_config_h += "\n#endif /* INC_DNNI_CONFIG_H */\n"""
+	return mixer_config
 
 
 def generate_kernels():
@@ -225,6 +221,7 @@ def generate_code(dataset, kernels, dilations, num_biases_per_kernel, quantiles,
 	jinja_environment = Environment(loader=FileSystemLoader('c_src/jinja_templates'))
 	template_rocket_config_h = jinja_environment.get_template('rocket_config_distributed.h.jinja')
 	template_rocket_config_c = jinja_environment.get_template('rocket_config_distributed.c.jinja')
+	template_rocket_mixer_config_h = jinja_environment.get_template('rocket_mixer_config_distributed.h.jinja')
 
 	num_kernels_per_device, kernel_idx = split_kernels(num_nodes, len(kernels))
 
@@ -262,12 +259,15 @@ def generate_code(dataset, kernels, dilations, num_biases_per_kernel, quantiles,
 	for f in files:
 		shutil.copy(f"c_src/{'src' if f[-1] == 'c' else 'include'}/{f}", "c_src/cp_firmware/app/")"""
 
-	generate_rocket_mixer_config(code_path="c_src/cp_firmware/app/",
-								 num_devices=num_nodes,
-								 num_total_nodes=num_nodes,
-								 len_time_series=len_timeseries,
-								 quantize=quantize,
-								 num_classes=num_classes)
+	mixer_config = generate_rocket_mixer_config(num_devices=num_nodes,
+												 num_total_nodes=num_nodes,
+												 len_time_series=len_timeseries,
+												 quantize=quantize,
+												 num_classes=num_classes)
+
+	output = template_rocket_mixer_config_h.render(mixer_config)
+	with open('c_src/cp_firmware/app/rocket_mixer_config.h', 'w') as f:
+		f.write(output)
 
 
 def generate_data(len_timeseries, quantize):

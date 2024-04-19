@@ -17,21 +17,15 @@ static uint8_t agg_input[AGGREGATE_SIZE];
 static Gpi_Hybrid_Tick t_ref;
 static uint8_t TOS_NODE_ID;
 
-static uint16_t (*receive_data_from_AP)(ap_message_t **);
-static void (*send_data_to_AP)(ap_message_t *, uint16_t);
 static uint8_t (*communication_finished_callback)(ap_message_t*, uint16_t);
 static uint16_t (*communication_starts_callback)(ap_message_t**);
 
 static ap_message_t dummy_message;
 
-void init_cp_os(uint16_t (*receive_data_from_AP_p)(ap_message_t **), 
-                void (*send_data_to_AP_p)(ap_message_t *, uint16_t), 
-                uint8_t (*communication_finished_callback_p)(ap_message_t*, uint16_t), 
+void init_cp_os(uint8_t (*communication_finished_callback_p)(ap_message_t*, uint16_t), 
                 uint16_t (*communication_starts_callback_p)(ap_message_t**),
                 uint8_t id)
 {
-  receive_data_from_AP = receive_data_from_AP_p;
-  send_data_to_AP = send_data_to_AP_p;
   communication_finished_callback = communication_finished_callback_p;
   communication_starts_callback = communication_starts_callback_p;
   TOS_NODE_ID = id;
@@ -48,49 +42,12 @@ void run()
   ap_message_t ap_pkt;
   message_layer_init();
   printf("Messagelayer init\r\n");
-  // wait_for_AP(&ap_pkt);
   round_nr = 1;
   // t_ref for first round is now (-> start as soon as possible)
   t_ref = gpi_tick_hybrid();
-  /*wait_for_other_agents();
-  // send all agents ready to AP
-  ap_message_t tx_pkt;
-  tx_pkt.header.type = TYPE_ALL_AGENTS_READY;
-  tx_pkt.header.id = (uint8_t) TOS_NODE_ID;
-  send_data_to_AP(&tx_pkt, 1);*/
   run_normal_operation();
 }
 
-void wait_for_AP(ap_message_t *AP_pkt)
-{
-   ap_message_t tx_pkt;
-   uint8_t ap_ready = 0;
-   AP_pkt->header.type = TYPE_ERROR;
-   while (AP_pkt->header.type != TYPE_AP_ACK) {
-      NRF_P0->OUTSET = BV(25);
-
-      // send metadata to AP
-      tx_pkt.header.type = TYPE_METADATA;
-      tx_pkt.header.id = (uint8_t) TOS_NODE_ID;
-      //tx_pkt.metadata_message.num_computing_units = NUM_ELEMENTS(cu_nodes);
-      //tx_pkt.metadata_message.num_drones = NUM_ELEMENTS(cf_nodes);
-      //tx_pkt.metadata_message.round_length_ms = ROUND_LENGTH_MS;
-      send_data_to_AP(&tx_pkt, 1);
-      
-      // wait for ap to process data
-      gpi_milli_sleep(100);
-
-      // try to receive data from AP.
-      AP_pkt->header.type = TYPE_ERROR;
-      uint16_t length_received = receive_data_from_AP(&AP_pkt);
-
-      // if AP sent more than one message something is wrong.
-      assert(length_received <= 1);
-      gpi_milli_sleep(500);
-      NRF_P0->OUTCLR = BV(25);
-      gpi_milli_sleep(50);
-   }
-}
 
 void run_rounds(uint8_t (*communication_finished_callback)(ap_message_t*, uint16_t), uint16_t (*communication_starts_callback)(ap_message_t**))
 {
@@ -136,7 +93,7 @@ void run_rounds(uint8_t (*communication_finished_callback)(ap_message_t*, uint16
     // write aggregate (currently not used)
     //set_flag_in_agg(agg_input, plant_idx);
     //set_node_in_agg(agg_input, 0, TOS_NODE_ID);
-    set_prio_in_agg(agg_input, 0, 1);
+    //set_prio_in_agg(agg_input, 0, 1);
     mixer_write_agg(agg_input);
     // write into mixer
     for (uint16_t tx_message_idx = 0; tx_message_idx < size_tx_messages; tx_message_idx++) {

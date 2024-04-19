@@ -156,7 +156,6 @@ static uint8_t			all_priorities[MX_GENERATION_SIZE - 1]; // subtract control msg
 static uint8_t			all_currTrigger[MX_GENERATION_SIZE - 1]; // subtract control msg
 static uint8_t			all_slot_full_rank[MX_GENERATION_SIZE - 1]; // subtract control msg
 static uint32_t			all_radio_on_time[MX_GENERATION_SIZE - 1]; // subtract control msg
-static uint8_t			agg_input[AGGREGATE_SIZE];
 
 //**************************************************************************************************
 //***** Global Variables ***************************************************************************
@@ -174,10 +173,6 @@ uint16_t __attribute__((section(".data")))	TOS_NODE_ID = 0;
 
 //**************************************************************************************************
 //***** Local Functions ****************************************************************************
-
-ASSERT_CT_STATIC(PRIO_WIDTH <= 8, get_prio_from_agg_needs_to_implement_support_for_priority_widths_greater_8_bit);
-
-ASSERT_CT_STATIC(PRIO_WIDTH <= 8, set_prio_in_agg_needs_to_implement_support_for_priority_widths_greater_8_bit);
 
 //**************************************************************************************************
 
@@ -541,7 +536,6 @@ static void initialization(void)
 	#if USE_SPI   
         printf("AP has a time window of %" PRIu32 " us for calculation and writing to Bolt.\n", gpi_tick_hybrid_to_us(app_time));
 
-	printf("With current configuration: AGGREGATE_SIZE_M_C_PRIORITIES=%u, AGGREGATE_SIZE_ALL_PRIORITIES=%u\n", AGGREGATE_SIZE_M_C_PRIORITIES, AGGREGATE_SIZE_ALL_PRIORITIES);
         #endif
 	mixer_print_config();
         
