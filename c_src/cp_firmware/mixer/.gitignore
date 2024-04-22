@@ -1,0 +1,7 @@
+scripts/__pycache__/
+scripts/parser_test_data/
+scripts/plots_todo/
+scripts/testing_latex_evaluation/
+scripts/visualization_test_data/
+.vscode/
+scripts/multiprocess_example.py

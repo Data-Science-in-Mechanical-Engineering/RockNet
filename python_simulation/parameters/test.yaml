@@ -1,0 +1,16 @@
+show_print: True
+
+# dataset global options
+dataset_name: Mnist # NonInvasiveFetalECGThorax2
+train_size: 0.8
+dataloader_num_workers: 8
+
+# optimizer options
+batch_size: 128
+batch_size_testing: 4096
+learning_rate: 0.001
+max_epochs: 1000
+patience_lr: 20
+patience: 100000
+use_cocob: False #True
+

@@ -1,0 +1,41 @@
+#ifndef INC_DNNI_CONFIG_H
+#define INC_DNNI_CONFIG_H
+
+#include <stdint.h>
+
+typedef struct message_assignment_t_tag
+{
+	uint8_t id;   // id of message slot
+	uint16_t size;  // slot size in byte
+	uint16_t mixer_assignment_start;  // the index in mixer, the message starts
+	uint16_t mixer_assignment_end;   // the index in mixer the message ends (not including this index)
+	uint16_t size_end; // the size of the piece of the message in the mixer message at index mixer_assignment_end-1
+} message_assignment_t;
+
+static const uint8_t nodes[] = { {% for node in nodes %} {{node}}, {% endfor %}};
+static const uint8_t rocket_nodes[] = { {% for dnni_node in dnni_nodes %} {{dnni_node}}, {% endfor %}};
+
+static message_assignment_t message_assignment[] = {
+{% for id in message_ids %} {.id={{id}}, .size={{message_sizes[loop.index0]}}},
+{% endfor %} };
+
+#define MX_PAYLOAD_SIZE {{mx_payload_size}}
+#define MX_ROUND_LENGTH {{mx_round_length}}
+#define MX_SLOT_LENGTH GPI_TICK_US_TO_HYBRID2({{slot_length}})
+#define ROUND_LENGTH_MS            ((150*MX_SLOT_LENGTH / (GPI_HYBRID_CLOCK_RATE / 1000000)) / 1000 + {{calculation_duration}})
+#define MX_GENERATION_SIZE {{mx_generation_size}}
+
+#define AGGREGATE_FLAGS_SIZE ({{aggregate_flag_size}})
+#define AGGREGATE_CONTENT_SIZE ({{aggregate_content_size}})
+
+typedef struct __attribute__((packed)) aggregate_field_t_tag
+{
+	uint8_t flags[AGGREGATE_FLAGS_SIZE];
+	float class_values[AGGREGATE_CONTENT_SIZE];
+} aggregate_field_t;
+
+#define AGGREGATE_SIZE (sizeof(aggregate_field_t))
+
+uint8_t get_rocket_node_idx(uint8_t id);
+
+#endif /* INC_DNNI_CONFIG_H */

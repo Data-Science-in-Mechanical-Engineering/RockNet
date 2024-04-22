@@ -1,0 +1,83 @@
+#include "rocket_config.h"
+#include "conv.h"
+#include <stdint.h>
+
+static time_series_type_t const *training_timeseries[NUM_TRAINING_TIMESERIES];
+static time_series_type_t const *evaluation_timeseries[NUM_EVALUATION_TIMESERIES];
+
+//-----------------Training Data------------------
+
+{% for tsdata in training_timeseries_data %}
+static const time_series_type_t training_timeseries_data{{loop.index}}[] = {{ tsdata }};
+{% endfor %}
+
+//-----------------Evaluation Data------------------
+
+{% for tsdata in evaluation_timeseries_data %}
+static const time_series_type_t evaluation_timeseries_data{{loop.index}}[] = {{ tsdata }};
+{% endfor %}
+
+static const uint8_t training_labels[] = {{training_labels}};
+static const uint8_t evaluation_labels[] = {{evaluation_labels}};
+
+static const uint16_t kernels[] = {{kernels}};
+static const uint32_t dilations[] = {{dilations}};
+static const float quantiles[] = {{quantiles}};
+
+static float biases[MAX_FEATURES_PER_DEVICE];
+
+extern uint16_t __attribute__((section(".data"))) TOS_NODE_ID;
+
+void init_rocket()
+{
+    {% for tsdata in training_timeseries_data %}
+    training_timeseries[{{loop.index-1}}] = training_timeseries_data{{loop.index}};
+    {% endfor %}
+
+    {% for tsdata in evaluation_timeseries_data %}
+    evaluation_timeseries[{{loop.index-1}}] = evaluation_timeseries_data{{loop.index}};
+    {% endfor %}
+
+    calc_bias(training_timeseries[0], biases, kernels, NUM_KERNELS, dilations, NUM_DILATIONS, quantiles, NUM_BIASES_PER_KERNEL);
+
+}
+
+const time_series_type_t const **get_training_timeseries()
+{
+    return training_timeseries;
+}
+
+const uint8_t *get_training_labels()
+{
+    return training_labels;
+}
+
+const time_series_type_t const **get_evaluation_timeseries()
+{
+    return evaluation_timeseries;
+}
+
+const uint8_t *get_evaluation_labels()
+{
+    return evaluation_labels;
+}
+
+const uint16_t *get_kernels()
+{
+    return kernels;
+}
+
+const uint32_t *get_dilations()
+{
+    return dilations;
+}
+
+const float *get_quantiles()
+{
+    return quantiles;
+}
+
+float *get_biases()
+{
+    return biases;
+}

@@ -1,0 +1,118 @@
+DPP2 Com Board Port
+===================
+- configure Bolt pins and integrate Bolt
+- nRF52840 PS v1.1: The LFRC oscillator can be calibrated to improve accuracy by using the HFXO as a reference oscillator during calibration.
+	- what happens with LFCLK during synchronization?
+- LFRC clock errata 192
+	- workaround included in SDK v15 (modules\nrfx\drivers\src\nrfx_clock.c:70)
+	-  LFRC frequency offset after calibration
+	- Apply the following code before starting the RCOSC32K calibration:
+		*(volatile uint32_t *)0x40000C34 = 0x00000002;
+	- Apply the following code after the RCOSC32K calibration is finished:
+		*(volatile uint32_t *)0x40000C34 = 0x00000000;
+- does Mixer internally use the LF clock? (required precision)
+
+Questions
+=========
+
+Problems
+========
+- initiator must have a message, otherwise: "!!! assertion failed in ../mixer/mixer.c line 386: NULL != mx.tx_reserve !!!"
+- cannot directly specify initiator (implement with TOS_NODE_ID)
+
+General
+=======
+- TRACE:
+    - 32bit mask defines which groups should be traced (upper bits are already predefined, lower bits (GPI_TRACE_LOG_USER) can be used for user groups)
+    - GPI_TRACE_RETURN(...) replaces return statement and can be used to print function exit and (elementary) return values
+    - GPI_TRACE_*() immediately flushes output
+    - GPI_TRACE_*_FAST() uses and internal print buffer and allows to flush later (timestamp is created vi a delayed service routine (DSR)) -> should be used to print in ISRs
+    - use printf() for the protocols log output since trace msgs can be deactivated
+- nodes array contains physical node ids and logical node id (node_id) is mapped from left to right starting at 0
+- output:
+    # trace_packet output:
+    slot   send.  fl.  IV   CV   payload
+    0096 - 800e - 80 - a0 - 01 - 0000010300000000...
+    # mx_trac_dump "Rx packet" output:
+    slot   send.  fl.  CV   payload              IV
+    9600   0e     80   01   0000010300000000 ... a0
+
+make
+====
+- build for local deployment: TARGET=hex
+    - GPI_ARCH_PLATFORM=GPI_ARCH_BOARD_TMOTE
+- build for FlockLab: TARGET=FLOCKLAB
+    - GPI_ARCH_PLATFORM=GPI_ARCH_BOARD_TMOTE_FLOCKLAB
+- wildcard $(LIBDIR)/mixer/*.c
+    - all c files in specified directory
+
+GPI internals
+=============
+General
+-------
+- gpi_tick_X_extended():
+    - sw extension that simply counts higher than the actual timer width (e.g. 32 bit instead of 16 bit for MSP430) -> has to be called periodically in order to avoid missing overruns
+- includes are processed from the most specific part (platform) to the most general part (cpu family)
+- gpi_tick_hybrid_reference() returns a reference time of the near past where the relation between slow and fast clock becomes clear (do not use this to schedule events)
+    - hybrid clock combines slow and fast clock to provide an efficient clock (better resolution than slow clock but can be used more energy efficient than fast clock)
+    - fast ticks between slow ticks are counted and both are combined into a hybrid clock
+- gpi_tick_hybrid() computes the hybrid time for the current time of the fast timer
+
+MSP430
+------
+- GPI_SLOW_CLOCK_RATE 32KHz Timer A (ACLK)
+- GPI_FAST_CLOCK_RATE 4MHz Timer B (SMCLK)
+
+Packet format
+=============
+uint16_t        slot_number
+uint8_t         sender_id
+Packet_Flags    flags
+    // This is LSB first so the first bit is is_full_rank.
+    uint8_t		info_type			: 4
+    uint8_t							: 1
+    uint8_t		owner_forecast_1	: 1
+    uint8_t		owner_forecast_2	: 1
+    uint8_t		is_full_rank		: 1
+uint8_t         coding_vector[(MX_GENERATION_SIZE + 7) / 8]
+uint8_t         payload[MX_PAYLOAD_SIZE]
+uint8_t         info_vector[(MX_GENERATION_SIZE + 7) / 8]
+
+A Mixer round
+=============
+- mixer_init(node_id)
+    - mixer_transport_init()
+        - setup timer A capture/control register 2 to capture FIFO events
+        - setup DMA modules
+    - init mixer data structures to a well-defined initial state
+- set weak release slot, prepare data to be sent
+- mixer_arm()
+
+History
+=======
+- activated when MX_COORDINATED_TX set
+- initially all nodes chained together in absent list
+- sentinel nodes mark the beginning of different lists and provide information about heard (present), unknown (absent) and finished nodes (additionally acked nodes if MX_SMART_SHUTDOWN >= 4)
+
+Requests
+========
+
+Smart Shutdown
+==============
+
+C-Lanuage
+=========
+- printf("\tTotal: %"PRIu32"\n\n", total) : format string for unsigned 32 bit
+
+weak zeroes
+===========
+- mixer_processing:469 update_weak_zero_map
+	- called from and when?
+- mixer_processing:510 if (p->flags.info_type == IT_WEAK_ZERO_MAP)
+
+warm start
+==========
+- don't reset history (mixer.c:226)
+- check whether we know at the end which nodes were neighbors this round
+	- i think we need another list in the history for met neighbors because of history purging
+- with warm start: set age of known nodes to some initial value

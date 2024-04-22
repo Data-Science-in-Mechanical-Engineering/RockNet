@@ -1,0 +1,146 @@
+#include "conv.h"
+#include "rocket_config.h"
+#include <stdint.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <math.h>
+
+#define min(a,b) \
+    ({ typeof (a) _a = (a); \
+    typeof (b) _b = (b); \
+    _a < _b ? _a : _b; })
+
+static void mult_timeseries(const float *in, float *out, float scalar)
+{
+    for (uint32_t i = 0; i < LENGTH_TIME_SERIES; i++) {
+        out[i] = scalar * in[i];
+    }
+}
+
+void mult_1(const float *in, float *out)
+{
+    mult_timeseries(in, out, -1.0f);
+}
+
+void mult3(const float *in, float *out)
+{
+    mult_timeseries(in, out, 3.0f);
+}
+
+
+/**
+ * convolution of timeseries with -1, as describes in section 3.2.3 of mini rocket paper
+*/
+void conv_1(const float *in_1, float *out, uint32_t dilation)
+{
+    for (uint32_t i = 0; i < LENGTH_TIME_SERIES; i++) {
+        out[i] = 0;
+        for (uint8_t j = 0; j < 9; j++) {
+            const uint32_t in_index = i - 4 * dilation + j*dilation;
+            
+            // padding
+            if (in_index < 0 || in_index >= LENGTH_TIME_SERIES) {
+                continue;
+            }
+
+            out[i] += in_1[in_index];
+        }
+    }
+}
+
+/**
+ * convolution of timeseries with 3, as described in section 3.2.3 of mini rocket paper
+ * @param kernel a bit array, containint 0, if the kernel is -1 and 1 if the kernel is 2, e.g. 100101000 = [2, -1, -1, 2, -1, 2, -1, -1, -1]
+*/
+void conv3(const float *in3, float *out, uint16_t kernel, uint32_t dilation)
+{
+    for (uint32_t i = 0; i < LENGTH_TIME_SERIES; i++) {
+        out[i] = 0;
+        for (uint8_t j = 0; j < 9; j++) {
+            if (kernel & (1 << j)) {
+                const uint32_t in_index = i - 4 * dilation + j*dilation;
+                
+                // padding
+                if (in_index < 0 || in_index >= LENGTH_TIME_SERIES) {
+                    continue;
+                }
+
+                out[i] += in3[in_index];
+            }
+        }
+    }
+}
+
+void add_timeseries(const float *in1, const float *in2, float *out)
+{
+    for (uint32_t i = 0; i < LENGTH_TIME_SERIES; i++) {
+        out[i] = in1[i] + in2[i];
+    }
+}
+
+static int cmpfunc (const void * a, const void * b) {
+   return ( *(float*)a - *(float*)b );
+}
+
+void calc_bias(const float *in, float *bias, uint16_t *kernels, uint32_t number_kernels, uint32_t *dilations, uint32_t number_dilations, float *quantiles, uint32_t biases_per_kernel)
+{
+    mult_1(in, timeseries_1);
+    mult3(in, timeseries3);
+
+    uint32_t bias_idx = 0;
+    for (uint32_t dilation_idx = 0; dilation_idx < number_dilations; dilation_idx++) {
+
+        conv_1(timeseries_1, conv_timeseries_1, dilations[dilation_idx]);
+
+
+        for (uint32_t kernel_idx = 0; kernel_idx < number_kernels; kernel_idx++) {
+
+            conv3(timeseries3, conv_timeseries3, kernels[kernel_idx], dilations[dilation_idx]);
+
+            // to addition in place to save memory
+            add_timeseries(conv_timeseries_1, conv_timeseries3, conv_timeseries3);
+
+            qsort(conv_timeseries3, LENGTH_TIME_SERIES, sizeof(float), cmpfunc);
+
+            for (uint32_t i = 0; i < biases_per_kernel; i++) {
+                bias[bias_idx] = conv_timeseries3[(int) min((LENGTH_TIME_SERIES * quantiles[bias_idx]), LENGTH_TIME_SERIES-1)];
+
+                bias_idx++;
+            }
+        }
+    }
+}
+
+
+void conv_multiple(const float *in, float *features, uint16_t *kernels, uint32_t number_kernels, uint32_t *dilations, uint32_t number_dilations, float *biases, uint32_t number_biases_per_kernel)
+{
+    mult_1(in, timeseries_1);
+    mult3(in, timeseries3);
+
+    uint32_t feature_idx = 0;
+    for (uint32_t dilation_idx = 0; dilation_idx < number_dilations; dilation_idx++) {
+
+        conv_1(timeseries_1, conv_timeseries_1, dilations[dilation_idx]);
+
+
+        for (uint32_t kernel_idx = 0; kernel_idx < number_kernels; kernel_idx++) {
+
+            conv3(timeseries3, conv_timeseries3, kernels[kernel_idx], dilations[dilation_idx]);
+
+            // to addition in place to save memory
+            add_timeseries(conv_timeseries_1, conv_timeseries3, conv_timeseries3);
+
+            for (uint32_t bias_idx = 0; bias_idx < number_biases_per_kernel; bias_idx++) {
+                features[feature_idx] = 0;
+
+                for (uint32_t i = 0; i < LENGTH_TIME_SERIES; i++) {
+                    if (conv_timeseries3[i] > biases[feature_idx]) {
+                        features[feature_idx]++;
+                    }
+                }
+                features[feature_idx] /= LENGTH_TIME_SERIES;
+                feature_idx++;
+            }
+        }
+    }
+}
