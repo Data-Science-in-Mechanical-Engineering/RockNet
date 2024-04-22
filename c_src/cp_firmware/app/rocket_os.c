@@ -113,7 +113,6 @@ static uint8_t communication_finished_callback(ap_message_t *data, uint16_t size
       {
         if (rx_time_series_last_round) {
           // calculated correct label?
-          printf("cumm: %d, %d\r\n", (int) (100*cummulative[0]), (int) (100*cummulative[1]));
           uint8_t pred_idx = get_max_idx(cummulative, NUM_CLASSES);
           batch_time = 0;
           if (pred_idx == label) {

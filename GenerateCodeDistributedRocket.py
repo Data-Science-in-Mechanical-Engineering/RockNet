@@ -363,7 +363,7 @@ if __name__ == "__main__":
 
 	num_biases_per_kernel = int(10_000 / (len(dilations) * len(kernels)))
 
-	generate_code((data_training, labels_training), (data_test[0:50], labels_test[0:50]), kernels, dilations, num_biases_per_kernel,
+	generate_code((data_training, labels_training), (data_test, labels_test), kernels, dilations, num_biases_per_kernel,
 				  quantiles(len(dilations) * len(kernels) * num_biases_per_kernel),
 				  num_nodes=num_nodes,
 				  quantize=quantize)
