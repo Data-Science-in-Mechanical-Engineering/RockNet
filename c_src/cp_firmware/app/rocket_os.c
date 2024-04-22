@@ -64,13 +64,11 @@ static uint8_t communication_finished_callback(ap_message_t *data, uint16_t size
     uint32_t current_time = round_nmbr % (NUM_TRAINING_TIMESERIES + NUM_EVALUATION_TIMESERIES);
 
     if (current_time < NUM_TRAINING_TIMESERIES) {
-      printf("Halooooooooooooo");
       current_training_ts_idx = current_time+2;
       current_evaluation_ts_idx = 0;
       training_state = TRAINING;
     } else {
       current_evaluation_ts_idx = current_time - NUM_TRAINING_TIMESERIES+2;
-      printf("Halo: %u", current_evaluation_ts_idx);
       current_training_ts_idx = 0;
       training_state = EVALUATION;
     }

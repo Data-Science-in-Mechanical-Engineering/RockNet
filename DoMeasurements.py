@@ -11,10 +11,10 @@ def get_boxplot(a):
 
 if __name__ == "__main__":
 	max_num_samples = 1000
-	num_nodes = 5
+	num_nodes = 15
 	quantize = True
-	name = "Parameterless"
-	ser = serial.Serial('COM5', baudrate=921600)
+	name = "ElectricDevices"
+	ser = serial.Serial('COM8', baudrate=921600)
 	print("Connected.")
 
 	data = {"timestamp": [], "accuracy": []}

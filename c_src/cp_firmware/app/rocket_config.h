@@ -9,26 +9,26 @@
        __typeof__ (b) _b = (b); \
      _a < _b ? _a : _b; })
 
-#define LENGTH_TIME_SERIES (136)
+#define LENGTH_TIME_SERIES (96)
 #define NUM_KERNELS (84)
-#define NUM_DILATIONS (5)
-#define NUM_BIASES_PER_KERNEL (23)
+#define NUM_DILATIONS (4)
+#define NUM_BIASES_PER_KERNEL (29)
 #define NUM_FEATURES (NUM_KERNELS * NUM_DILATIONS * NUM_BIASES_PER_KERNEL)
 
-#define NUM_TRAINING_TIMESERIES (23)
+#define NUM_TRAINING_TIMESERIES (1000)
 #define NUM_EVALUATION_TIMESERIES (50)
 
-#define MAX_FEATURES_PER_DEVICE (4830)
+#define MAX_FEATURES_PER_DEVICE (696)
 
 typedef int8_t time_series_type_t;
 
-static uint16_t devices_kernels_idx[] = {0, 42, 84,};
+static uint16_t devices_kernels_idx[] = {0, 6, 12, 18, 24, 30, 36, 42, 48, 54, 59, 64, 69, 74, 79, 84,};
 
-static uint16_t devices_num_features[] = {4830, 4830,};
+static uint16_t devices_num_features[] = {696, 696, 696, 696, 696, 696, 696, 696, 696, 580, 580, 580, 580, 580, 580,};
 
 #define DEVICE_NUM_FEATURES (devices_num_features[TOS_NODE_ID-1])
 
-#define NUM_CLASSES (2)
+#define NUM_CLASSES (7)
 
 #define BATCH_SIZE MINIMUM(128, NUM_TRAINING_TIMESERIES)
 
