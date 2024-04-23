@@ -118,8 +118,8 @@ void run_rounds(uint8_t (*communication_finished_callback)(ap_message_t*, uint16
     ticks_start = gpi_tick_hybrid() - ticks_start;
     ticks_start = gpi_tick_hybrid_to_us(ticks_start);
     
-    if (TOS_NODE_ID != 1) {
-      //printf("i: %u\n", ticks_start);
+    if (TOS_NODE_ID == 1) {
+      printf("i: %u\n", ticks_start);
       //printf("m: %u\n", messages_received_idx - 1);
       //printf("%u\r\n", ROUND_LENGTH_MS);
     }
@@ -169,6 +169,7 @@ void run_rounds(uint8_t (*communication_finished_callback)(ap_message_t*, uint16
     for (uint16_t i = 0; i < NUM_ELEMENTS(message_assignment); i++) {
       // write data in array, when message was received
       messages_received_idx += message_layer_get_message(message_assignment[i].id, (uint8_t *) &mixer_messages_received[messages_received_idx]);
+      //printf("%u / %u \r\n", messages_received_idx, NUM_ELEMENTS(message_assignment));
     }
         
     // mixer_print_statistics();

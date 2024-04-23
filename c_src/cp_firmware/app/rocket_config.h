@@ -15,16 +15,16 @@
 #define NUM_BIASES_PER_KERNEL (29)
 #define NUM_FEATURES (NUM_KERNELS * NUM_DILATIONS * NUM_BIASES_PER_KERNEL)
 
-#define NUM_TRAINING_TIMESERIES (1000)
-#define NUM_EVALUATION_TIMESERIES (50)
+#define NUM_TRAINING_TIMESERIES (8500)
+#define NUM_EVALUATION_TIMESERIES (200)
 
-#define MAX_FEATURES_PER_DEVICE (696)
+#define MAX_FEATURES_PER_DEVICE (812)
 
 typedef int8_t time_series_type_t;
 
-static uint16_t devices_kernels_idx[] = {0, 6, 12, 18, 24, 30, 36, 42, 48, 54, 59, 64, 69, 74, 79, 84,};
+static uint16_t devices_kernels_idx[] = {0, 7, 14, 21, 28, 35, 42, 48, 54, 60, 66, 72, 78, 84,};
 
-static uint16_t devices_num_features[] = {696, 696, 696, 696, 696, 696, 696, 696, 696, 580, 580, 580, 580, 580, 580,};
+static uint16_t devices_num_features[] = {812, 812, 812, 812, 812, 812, 696, 696, 696, 696, 696, 696, 696,};
 
 #define DEVICE_NUM_FEATURES (devices_num_features[TOS_NODE_ID-1])
 
