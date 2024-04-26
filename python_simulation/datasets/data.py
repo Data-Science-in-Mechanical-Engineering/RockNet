@@ -48,6 +48,11 @@ def load_ucr_dataset(name, test=False):
     X = X[shuffle_vec, :]
     y = y[shuffle_vec]
 
+    y_unique = np.unique(y)
+    if len(y_unique) == 2:
+        if np.all(np.unique(y) == [-1, 1]):
+            y[y==-1] = 0
+
     return np.array(X, dtype=np.float32), np.array(y, dtype=np.int64)
 
 

@@ -117,7 +117,8 @@ class Trainer:
 
         self.__best_model = None
 
-        self.__accuracies = []
+        self.__test_accuracies = []
+        self.__evaluation_accuracies = []
 
     def run(self):
         # rocket_parameters = fit(self.__classification_dataset.X_train, 10_000)
@@ -153,18 +154,27 @@ class Trainer:
             #validate
             self.__model.eval()
             validation_loss, validation_accuracy = self.eval(self.__eval_dl)
+            self.__evaluation_accuracies.append(validation_accuracy.detach().cpu().numpy())
+
 
             _, test_accuracy = self.eval(self.__test_dl)
 
-            self.__accuracies.append(test_accuracy.detach().cpu().numpy())
+            self.__test_accuracies.append(test_accuracy.detach().cpu().numpy())
 
-            if epoch % 10 == 0:
-                file_name = get_logger_name(f"{self.__params['dataset_name']}_{self.__seed}",
+            if epoch % 1 == 0:
+                file_name = get_logger_name(f"{self.__params['dataset_name']}_{self.__seed}_test",
                                             use_rocket=self.__params["use_rocket"],
                                             use_cocob=self.__params['use_cocob'],
                                             learning_rate=self.__params['learning_rate'])
                 with open(f"results/{file_name}", 'wb') as handle:
-                    p.dump(self.__accuracies, handle, protocol=p.HIGHEST_PROTOCOL)
+                    p.dump(self.__test_accuracies, handle, protocol=p.HIGHEST_PROTOCOL)
+
+                file_name = get_logger_name(f"{self.__params['dataset_name']}_{self.__seed}_eval",
+                                            use_rocket=self.__params["use_rocket"],
+                                            use_cocob=self.__params['use_cocob'],
+                                            learning_rate=self.__params['learning_rate'])
+                with open(f"results/{file_name}", 'wb') as handle:
+                    p.dump(self.__evaluation_accuracies, handle, protocol=p.HIGHEST_PROTOCOL)
 
             if not self.__params["use_cocob"]:
                 self.__scheduler.step(validation_loss)
@@ -241,9 +251,8 @@ if __name__ == "__main__":
     df = pd.read_csv(f"{Path.home()}/datasets/DataSummary.csv")
     names = df["Name"]
 
-    for n in names[30:]:
+    for n in names:
         with open(parameter_path, "r") as file:
             params = yaml.safe_load(file)
         params["dataset_name"] = n
         Trainer(params, seed=0).run()
-

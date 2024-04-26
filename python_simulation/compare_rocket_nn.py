@@ -26,7 +26,7 @@ if __name__ == "__main__":
     data = pd.read_csv(f"{Path.home()}/datasets/DataSummary.csv")
     names = data["Name"]
     #names = ["ElectricDevices", "NonInvasiveFetalECGThorax2", "Crop", "ChlorineConcentration"]
-    names = ["ElectricDevices"]
+    # names = ["ElectricDevices"]
 
     lr = 0.001
 
