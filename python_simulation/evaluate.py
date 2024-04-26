@@ -27,7 +27,7 @@ if __name__ == "__main__":
 
     data = pd.read_csv(f"{Path.home()}/datasets/DataSummary.csv")
     names = data["Name"]
-    names = ["ECG5000", "ChlorineConcentration", "Crop", "ECGFiveDays"]
+    names = ["ElectricDevices", "ECG5000", "ChlorineConcentration", "Crop", "ECGFiveDays"]
 
     max_num_seeds = 100
     seed_offset = 0
@@ -35,7 +35,7 @@ if __name__ == "__main__":
 
     for name_dataset in names:
         plt.figure(figsize=(10,10))
-        learning_rates = [0.0001] # [0.1, 0.01, 0.001, 0.0001, 0.00001]
+        learning_rates = [0.001]  #[0.1, 0.01, 0.001, 0.0001, 0.00001]
 
         color_idx = 0
         for l in learning_rates:

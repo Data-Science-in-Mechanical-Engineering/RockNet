@@ -339,7 +339,6 @@ def load_ucr_dataset(name, test=False):
 
 def generate_data_ucr(num_trajectories, name_dataset, test):
 	X_train, y_train = load_ucr_dataset(name_dataset, test)
-
 	num_trajectories = min(num_trajectories, len(X_train))
 
 	return (np.array(X_train[0:num_trajectories], dtype=np.float32),
