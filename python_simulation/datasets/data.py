@@ -48,6 +48,11 @@ def load_ucr_dataset(name, test=False):
     X = X[shuffle_vec, :]
     y = y[shuffle_vec]
 
+    y_unique = np.unique(y)
+    if len(y_unique) == 2:
+        if np.all(np.unique(y) == [-1, 1]):
+            y[y==-1] = 0
+
     return np.array(X, dtype=np.float32), np.array(y, dtype=np.int64)
 
 
@@ -155,14 +160,17 @@ class ClassificationDataset:
         self.num_classes = int(round(max(y_test))) + 1
         self.length_timeseries = len(X_train[0])
 
-        rocket_parameters = fit(X_train, 10_000)
-        X_train = transform(X_train, rocket_parameters)
-        X_test = transform(X_test, rocket_parameters)
+        if params["use_rocket"]:
+            rocket_parameters = fit(X_train, 10_000)
+            X_train = transform(X_train, rocket_parameters)
+            X_test = transform(X_test, rocket_parameters)
 
         # X_train = torch.tensor(X_train, device="cuda:0")
         # X_test = torch.tensor(X_test, device="cuda:0")
         # y_train = torch.tensor(y_train, device="cuda:0")
         # y_test = torch.tensor(y_test, device="cuda:0")
+
+        self.num_features = len(X_train[0])
 
         self.train_ds = PartDataset(X_train[0:size_training, :], y_train[0:size_training])
         self.eval_ds = PartDataset(X_train[size_training:, :], y_train[size_training:])
