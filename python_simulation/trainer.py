@@ -250,7 +250,6 @@ if __name__ == "__main__":
     parameter_path = "parameters/test.yaml"
     df = pd.read_csv(f"{Path.home()}/datasets/DataSummary.csv")
     names = df["Name"]
-
     for n in names:
         with open(parameter_path, "r") as file:
             params = yaml.safe_load(file)

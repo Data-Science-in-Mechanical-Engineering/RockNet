@@ -10,8 +10,6 @@ if __name__ == "__main__":
     data = pd.read_csv(f"{Path.home()}/datasets/DataSummary.csv")
     names = data["Name"]
 
-    learning_rates = [0.1, 0.01, 0.001, 0.0001, 0.00001]
-
     with open(parameter_path, "r") as file:
         params = yaml.safe_load(file)
 
@@ -22,7 +20,13 @@ if __name__ == "__main__":
         params_copy["dataset_name"] = n
         params_copy["show_print"] = False
 
-        # cocob
+        for use_rocket in [True, False]:
+            params_copy["use_rocket"] = use_rocket
+            with open(f"{Path.home()}/hpc_parameters/ROCKET/params{i}.yaml", 'w') as file:
+                yaml.dump(params_copy, file)
+                i += 1
+
+        """# cocob
         params_copy["use_cocob"] = True
 
         with open(f"{Path.home()}/hpc_parameters/ROCKET/params{i}.yaml", 'w') as file:
@@ -35,5 +39,5 @@ if __name__ == "__main__":
             params_copy["learning_rate"] = lr
             with open(f"{Path.home()}/hpc_parameters/ROCKET/params{i}.yaml", 'w') as file:
                 yaml.dump(params_copy, file)
-                i += 1
+                i += 1"""
 

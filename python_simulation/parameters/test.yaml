@@ -2,8 +2,8 @@ show_print: True
 
 # model options
 use_rocket: False
-num_neurons: 100
-num_layers: 10
+num_neurons: 10
+num_layers: 4
 
 # dataset global options
 dataset_name: ElectricDevices # ChlorineConcentration # NonInvasiveFetalECGThorax2

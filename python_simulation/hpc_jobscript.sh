@@ -9,7 +9,7 @@
 #SBATCH --mail-user=alexander.graefe@dsme.rwth-aachen.de
 #SBATCH --mem-per-cpu=3GB # memory per node
 #SBATCH --time=2-00:00:00
-#SBATCH --array=0-767
+#SBATCH --array=0-255
 
 module load Python/3.10.4
 

@@ -29,5 +29,5 @@ if __name__ == '__main__':
     with open(f"/work/mf724021/hpc_parameters/ROCKET/params{args.iter_id}.yaml", "r") as file:
         params = yaml.safe_load(file)
 
-    for i in range(100):
+    for i in range(10):
         trainer.parallel_simulation_wrapper(params, seed=i)
