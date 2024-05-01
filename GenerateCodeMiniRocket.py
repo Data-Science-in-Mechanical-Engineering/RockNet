@@ -185,25 +185,43 @@ def generate_matrix_code(matrix, use_float):
 	return data[0:-1] + "}"
 
 
-def generate_code(dataset, kernels, dilations, num_biases_per_kernel, quantiles):
+def quantize_8_bit(data, offset, scaling):
+	return np.clip((data - offset) / scaling * 127, a_min=-127, a_max=127)
+
+
+def generate_code(dataset_training, dataset_evaluation, kernels, dilations, num_biases_per_kernel, quantiles, quantize):
 	jinja_environment = Environment(loader=FileSystemLoader('c_src/jinja_templates'))
 	template_rocket_config_h = jinja_environment.get_template('rocket_config.h.jinja')
 	template_rocket_config_c = jinja_environment.get_template('rocket_config.c.jinja')
 
-	num_classes = int(round(max(dataset[1])))
+	if quantize:
+		quantization_offset = np.mean(dataset_training[0])
+		quantization_scaling = np.percentile(np.abs(dataset_training[0] - quantization_offset), q=99.9)
+
+		dataset_training[0] = quantize_8_bit(dataset_training[0], quantization_offset, quantization_scaling)
+		dataset_evaluation[0] = quantize_8_bit(dataset_evaluation[0], quantization_offset, quantization_scaling)
+
+	num_classes = int(round(max(dataset_training[1])))
 
 	template_values = {
-		'length_time_series': len(dataset[0][0]),
-		'num_time_series': len(dataset[0]),
+		'time_series_type_t': "int8_t" if quantize else "float",
+		'length_time_series': len(dataset_training[0][0]),
+		'num_training_time_series': len(dataset_training[0]),
+		'num_evaluation_time_series': len(dataset_evaluation[0]),
 		'num_kernels': len(kernels),
 		'num_dilations': len(dilations),
 		'num_biases_per_kernel': num_biases_per_kernel,
-		'timeseries_data': [generate_matrix_code(m, use_float=True) for m in dataset[0]],
-		'labels': generate_matrix_code(dataset[1]-1, use_float=False),
+		'training_timeseries_data': [generate_matrix_code(m, use_float=not quantize) for m in dataset_training[0]],
+		'training_labels': generate_matrix_code(dataset_training[1] - 1, use_float=False),
+		'evaluation_labels': generate_matrix_code(dataset_evaluation[1] - 1, use_float=False),
+		'evaluation_timeseries_data': [generate_matrix_code(m, use_float=not quantize) for m in dataset_evaluation[0]],
+		'training_labels_training_evaluation': generate_matrix_code(dataset_evaluation[1] - 1, use_float=False),
 		'kernels': generate_matrix_code(kernels, use_float=False),
 		'dilations': generate_matrix_code(dilations, use_float=False),
 		'quantiles': generate_matrix_code(quantiles, use_float=True),
-		"num_classes": num_classes
+		'quantiles': generate_matrix_code(quantiles, use_float=True),
+		'num_classes': num_classes,
+		'batch_size': 128
 	}
 
 	output = template_rocket_config_h.render(template_values)
@@ -311,8 +329,8 @@ def load_ucr_dataset(name, test=False):
 	return np.array(X, dtype=np.float32), np.array(y, dtype=np.int64)
 
 
-def generate_data_ucr(num_trajectories, name_dataset):
-	X_train, y_train = load_ucr_dataset(name_dataset)
+def generate_data_ucr(num_trajectories, name_dataset, test):
+	X_train, y_train = load_ucr_dataset(name_dataset, test=test)
 
 	num_trajectories = min(num_trajectories, len(X_train))
 
@@ -326,17 +344,18 @@ if __name__ == "__main__":
 
 	#ädata, labels = generate_data(len_timeseries, quantize)
 
-	data, labels = generate_data_ucr(num_trajectories=1000, name_dataset="ECGFiveDays")
+	data_train, labels_train = generate_data_ucr(num_trajectories=1000, name_dataset="OSULeaf", test=False)
+	data_test, labels_test = generate_data_ucr(num_trajectories=1000, name_dataset="OSULeaf", test=True)
 
-	len_timeseries = len(data[0])
-
+	len_timeseries = len(data_train[0])
 
 	dilations = generate_dilations(len_timeseries)
 	kernels = generate_kernels()
 
 	num_biases_per_kernel = int(10_000 / (len(dilations) * len(kernels)))
 
-	generate_code((data, labels), kernels, dilations, num_biases_per_kernel, quantiles(len(dilations)*len(kernels)*num_biases_per_kernel))
+	generate_code([data_train, labels_train], [data_test, labels_test], kernels, dilations, num_biases_per_kernel,
+				  quantiles(len(dilations)*len(kernels)*num_biases_per_kernel), quantize=True)
 
 	kernel_bins = generate_kernels()
 

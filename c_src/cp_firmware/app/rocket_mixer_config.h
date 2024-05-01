@@ -16,27 +16,27 @@ static const uint8_t nodes[] = {  1,  2,  3,  4,  5,  6,  7,  8,  9,  10,  11,  
 static const uint8_t rocket_nodes[] = {  1,  2,  3,  4,  5,  6,  7,  8,  9,  10,  11,  12,  13, };
 
 static message_assignment_t message_assignment[] = {
- {.id=254, .size=100},
- {.id=1, .size=30},
- {.id=2, .size=30},
- {.id=3, .size=30},
- {.id=4, .size=30},
- {.id=5, .size=30},
- {.id=6, .size=30},
- {.id=7, .size=30},
- {.id=8, .size=30},
- {.id=9, .size=30},
- {.id=10, .size=30},
- {.id=11, .size=30},
- {.id=12, .size=30},
- {.id=13, .size=30},
+ {.id=254, .size=431},
+ {.id=1, .size=26},
+ {.id=2, .size=26},
+ {.id=3, .size=26},
+ {.id=4, .size=26},
+ {.id=5, .size=26},
+ {.id=6, .size=26},
+ {.id=7, .size=26},
+ {.id=8, .size=26},
+ {.id=9, .size=26},
+ {.id=10, .size=26},
+ {.id=11, .size=26},
+ {.id=12, .size=26},
+ {.id=13, .size=26},
  };
 
 #define MX_PAYLOAD_SIZE 100
 #define MX_ROUND_LENGTH 150
-#define MX_SLOT_LENGTH GPI_TICK_US_TO_HYBRID2(673)
-#define ROUND_LENGTH_MS            ((150*MX_SLOT_LENGTH / (GPI_HYBRID_CLOCK_RATE / 1000000)) / 1000 + 170)
-#define MX_GENERATION_SIZE 15
+#define MX_SLOT_LENGTH GPI_TICK_US_TO_HYBRID2(681)
+#define ROUND_LENGTH_MS            ((150*MX_SLOT_LENGTH / (GPI_HYBRID_CLOCK_RATE / 1000000)) / 1000 + 149)
+#define MX_GENERATION_SIZE 19
 
 #define AGGREGATE_FLAGS_SIZE (0)
 #define AGGREGATE_CONTENT_SIZE (0)

@@ -93,6 +93,10 @@ class MnistDataloader(object):
         return (np.array(x_train, dtype=np.float32)[0:1000], np.array(y_train)[0:1000]), (np.array(x_test[0:1000], dtype=np.float32), np.array(y_test)[0:1000])
 
 
+def quantize_8_bit(data, offset, scaling):
+    return np.clip((data - offset) / scaling * 127, a_min=-127, a_max=127)
+
+
 class ClassificationDataset:
     def __init__(self, params, seed):
         np.random.seed(seed)
@@ -147,6 +151,13 @@ class ClassificationDataset:
         else:
             X_train, y_train = load_ucr_dataset(name=params["dataset_name"], test=False)
             X_test, y_test = load_ucr_dataset(name=params["dataset_name"], test=True)
+
+            if params["use_rocket"]:
+                quantization_offset = np.mean(X_train)
+                quantization_scaling = np.percentile(np.abs(X_train - quantization_offset), q=99.9)
+
+                X_train = quantize_8_bit(X_train, quantization_offset, quantization_scaling)
+                X_test = quantize_8_bit(X_test, quantization_offset, quantization_scaling)
 
             self.data_mean = np.mean(X_train)
             self.data_std = np.std(y_train)

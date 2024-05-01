@@ -74,7 +74,7 @@ void conv3(const float *in3, float *out, uint16_t kernel, uint32_t dilation)
     }
 }
 
-void add_timeseries(const float *in1, const float *in2, time_series_type_t *out)
+void add_timeseries(const float *in1, const float *in2, float *out)
 {
     for (uint32_t i = 0; i < LENGTH_TIME_SERIES; i++) {
         out[i] = in1[i] + in2[i];

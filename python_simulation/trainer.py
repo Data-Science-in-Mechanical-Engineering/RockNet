@@ -249,9 +249,9 @@ if __name__ == "__main__":
     np.random.seed(1)
     parameter_path = "parameters/test.yaml"
     df = pd.read_csv(f"{Path.home()}/datasets/DataSummary.csv")
-    names = df["Name"]
+    names = ["OSULeaf"]
     for n in names:
         with open(parameter_path, "r") as file:
             params = yaml.safe_load(file)
         params["dataset_name"] = n
-        Trainer(params, seed=0).run()
+        Trainer(params, seed=10).run()

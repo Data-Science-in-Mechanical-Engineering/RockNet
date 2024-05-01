@@ -169,7 +169,7 @@ void run_rounds(uint8_t (*communication_finished_callback)(ap_message_t*, uint16
     for (uint16_t i = 0; i < NUM_ELEMENTS(message_assignment); i++) {
       // write data in array, when message was received
       messages_received_idx += message_layer_get_message(message_assignment[i].id, (uint8_t *) &mixer_messages_received[messages_received_idx]);
-      //printf("%u / %u \r\n", messages_received_idx, NUM_ELEMENTS(message_assignment));
+      // printf("%u / %u \r\n", messages_received_idx, NUM_ELEMENTS(message_assignment));
     }
         
     // mixer_print_statistics();

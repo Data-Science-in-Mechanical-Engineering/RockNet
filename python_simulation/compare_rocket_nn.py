@@ -4,6 +4,8 @@ import matplotlib.pyplot as plt
 
 import pickle as p
 
+import numpy as np
+
 from trainer import get_logger_name
 
 import pandas as pd
@@ -22,11 +24,57 @@ def plot_data(file, color, label):
         print(f"File {file} not found {e}")
 
 
+def load_data(name_dataset, use_rocket, lr):
+    file = get_logger_name(name_dataset, use_cocob=False, learning_rate=lr, use_rocket=use_rocket)
+    try:
+        with open(f"results/{file}", 'rb') as handle:
+            acc = p.load(handle)
+        return acc
+    except:
+        return None
+
+
+def get_final_accuracy(name_dataset, use_rocket, lr):
+
+    acc_evaluation = load_data(name_dataset + "_eval", use_rocket, lr)
+    acc_test = load_data(name_dataset + "_test", use_rocket, lr)
+
+    if acc_evaluation is None:
+        return False, None
+
+    return True, acc_test[np.argmax(acc_evaluation)]
+
+
+def plot_comparison_entire_dataset():
+    data = pd.read_csv(f"{Path.home()}/datasets/DataSummary.csv")
+    names = data["Name"]
+    results = []
+    for n in names:
+        for i in range(10):
+            name_dataset_seed = f"{n}_{i}"
+            succ_rocket, acc_rocket = get_final_accuracy(name_dataset_seed, True, 0.001)
+            succ_nn, acc_nn = get_final_accuracy(name_dataset_seed, False, 0.001)
+            if succ_nn and succ_rocket:
+                results.append([acc_rocket, acc_nn])
+
+    results = np.array(results)
+    plt.scatter(results[:, 0], results[:, 1])
+    plt.plot([0, 1], [0, 1], 'k')
+    plt.show()
+
+    data = {"accRocket": results[:, 0], "accNN": results[:, 1]}
+    df = pd.DataFrame(data)
+    df.to_csv("results/plots/ComparisonNNROCKET.csv")
+
+
 if __name__ == "__main__":
+    #plot_comparison_entire_dataset()
+    #exit(0)
+
     data = pd.read_csv(f"{Path.home()}/datasets/DataSummary.csv")
     names = data["Name"]
     #names = ["ElectricDevices", "NonInvasiveFetalECGThorax2", "Crop", "ChlorineConcentration"]
-    names = ["OSULeaf"]
+    #names = ["OSULeaf"]
 
     lr = 0.001
 
@@ -36,16 +84,17 @@ if __name__ == "__main__":
     seed = 0
     for name_dataset in names:
         plt.figure(figsize=(10,10))
-        learning_rates = [0.1, 0.01, 0.001, 0.0001, 0.00001]
+        learning_rates = [0.001]
         color_idx = 0
-        name_dataset_seed = f"archive/{name_dataset}_{2}"
-        label = get_logger_name(name_dataset_seed, use_cocob=False, learning_rate=lr, use_rocket=True)
-        plot_data(label, colors[color_idx], label=label)
+        for i in range(10):
+            name_dataset_seed = f"{name_dataset}_{i}_test"
+            label = get_logger_name(name_dataset_seed, use_cocob=False, learning_rate=lr, use_rocket=True)
+            plot_data(label, colors[color_idx], label=label)
         color_idx += 1
-
-        name_dataset_seed = f"archive/{name_dataset}_{seed}"
-        label = get_logger_name(name_dataset_seed, use_cocob=False, learning_rate=lr, use_rocket=False)
-        plot_data(label, colors[color_idx], label=label)
+        for i in range(10):
+            name_dataset_seed = f"{name_dataset}_{i}_test"
+            label = get_logger_name(name_dataset_seed, use_cocob=False, learning_rate=lr, use_rocket=False)
+            plot_data(label, colors[color_idx], label=label)
         color_idx += 1
 
         plt.title(name_dataset)

@@ -5,10 +5,16 @@
 #include <stdio.h>
 #include <math.h>
 
-void classify_part(const float *in, float *out);
+#include "rocket_config.h"
 
-void update_weights(float *out_pred, uint8_t idx_class, uint32_t round_nmbr);
+void classify_part(const time_series_type_t *in, float *out);
 
-void init_linear_classifier();
+uint8_t get_max_idx(float *in, uint8_t length);
+
+uint8_t calculate_and_accumulate_gradient(float *out_pred, uint8_t idx_class);
+
+void update_weights();
+
+void init_linear_classifier(uint8_t id);
 
 #endif

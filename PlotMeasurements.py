@@ -1,5 +1,4 @@
-import serial
-import numpy as np
+
 import pandas as pd
 
 import matplotlib.pyplot as plt
@@ -23,7 +22,22 @@ def plot_ram():
 	plt.show()
 
 
+def parse_csv(name, num_nodes):
+	data = pd.read_csv(f"../Accuracy{name}{num_nodes}{True}.csv")
+	data.loc[:, "timestamp"] = data["timestamp"] / 3600
+	data.loc[:, "accuracy"] = data["accuracy"] / 10
+
+	data.to_csv(f"../AccuracyFinal{name}{num_nodes}{True}.csv")
+
+
 if __name__ == "__main__":
+
+	parse_csv("OSULeaf", 13)
+	parse_csv("OSULeafNN", 1)
+
+	parse_csv("ElectricDevices", 13)
+	parse_csv("ElectricDevicesNN", 1)
+	exit(0)
 	plot_ram()
 	quantize = True
 	name = "Parameterless"

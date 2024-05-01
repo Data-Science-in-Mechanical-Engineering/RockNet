@@ -63,14 +63,14 @@ static uint8_t communication_finished_callback(ap_message_t *data, uint16_t size
   if (training_state == IDLE && round_nmbr != -1lu) {
     uint32_t current_time = round_nmbr % (NUM_TRAINING_TIMESERIES + NUM_EVALUATION_TIMESERIES);
 
-    if (current_time < NUM_TRAINING_TIMESERIES) {
-      current_training_ts_idx = current_time+2;
-      current_evaluation_ts_idx = 0;
-      training_state = TRAINING;
-    } else {
-      current_evaluation_ts_idx = current_time - NUM_TRAINING_TIMESERIES+2;
+    if (current_time < NUM_EVALUATION_TIMESERIES) {
+      current_evaluation_ts_idx = current_time+2;
       current_training_ts_idx = 0;
       training_state = EVALUATION;
+    } else {
+      current_training_ts_idx = current_time - NUM_EVALUATION_TIMESERIES+2;
+      current_evaluation_ts_idx = 0;
+      training_state = TRAINING;
     }
   }
   //printf("%lu\r\n", round_nmbr);

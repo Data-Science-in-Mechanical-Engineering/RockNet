@@ -2,13 +2,23 @@
 #include "conv.h"
 #include <stdint.h>
 
-static float *timeseries[NUM_TIMESERIES];
+static time_series_type_t const *training_timeseries[NUM_TRAINING_TIMESERIES];
+static time_series_type_t const *evaluation_timeseries[NUM_EVALUATION_TIMESERIES];
 
-{% for tsdata in timeseries_data %}
-static const float timeseries_data{{loop.index}}[] = {{ tsdata }};
+//-----------------Training Data------------------
+
+{% for tsdata in training_timeseries_data %}
+static const time_series_type_t training_timeseries_data{{loop.index}}[] = {{ tsdata }};
 {% endfor %}
 
-static uint8_t labels[] = {{labels}};
+//-----------------Evaluation Data------------------
+
+{% for tsdata in evaluation_timeseries_data %}
+static const time_series_type_t evaluation_timeseries_data{{loop.index}}[] = {{ tsdata }};
+{% endfor %}
+
+static const uint8_t training_labels[] = {{training_labels}};
+static const uint8_t evaluation_labels[] = {{evaluation_labels}};
 
 static const uint16_t kernels[] = {{kernels}};
 static const uint32_t dilations[] = {{dilations}};
@@ -18,23 +28,36 @@ static float biases[NUM_FEATURES];
 
 void init_rocket()
 {
-    {% for tsdata in timeseries_data %}
-    timeseries[{{loop.index-1}}] = timeseries_data{{loop.index}};
+    {% for tsdata in training_timeseries_data %}
+    training_timeseries[{{loop.index-1}}] = training_timeseries_data{{loop.index}};
     {% endfor %}
 
+    {% for tsdata in evaluation_timeseries_data %}
+    evaluation_timeseries[{{loop.index-1}}] = evaluation_timeseries_data{{loop.index}};
+    {% endfor %}
 
-    calc_bias(timeseries[0], biases, kernels, NUM_KERNELS, dilations, NUM_DILATIONS, quantiles, NUM_BIASES_PER_KERNEL);
+    calc_bias(training_timeseries[0], biases, kernels, NUM_KERNELS, dilations, NUM_DILATIONS, quantiles, NUM_BIASES_PER_KERNEL);
 
 }
 
-const time_series_type_t const **get_timeseries()
+const time_series_type_t const **get_training_timeseries()
 {
-    return timeseries;
+    return training_timeseries;
 }
 
-const uint8_t *get_labels()
+const uint8_t *get_training_labels()
 {
-    return labels;
+    return training_labels;
+}
+
+const time_series_type_t const **get_evaluation_timeseries()
+{
+    return evaluation_timeseries;
+}
+
+const uint8_t *get_evaluation_labels()
+{
+    return evaluation_labels;
 }
 
 const uint16_t *get_kernels()
@@ -56,3 +79,4 @@ float *get_biases()
 {
     return biases;
 }
+d
