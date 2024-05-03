@@ -168,7 +168,9 @@ class ClassificationDataset:
 
         size_training = int(round(len(X_train) * params["train_size"]))
 
-        self.num_classes = int(round(max(y_test))) + 1
+        self.num_classes = int(round(max(y_train)))
+        y_test -= 1
+        y_train -= 1
         self.length_timeseries = len(X_train[0])
 
         if params["use_rocket"]:

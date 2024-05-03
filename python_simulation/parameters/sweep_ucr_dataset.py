@@ -9,12 +9,15 @@ if __name__ == "__main__":
     parameter_path = "../parameters/test.yaml"
     data = pd.read_csv(f"{Path.home()}/datasets/DataSummary.csv")
     names = data["Name"]
+    print(data)
 
     with open(parameter_path, "r") as file:
         params = yaml.safe_load(file)
 
     i = 0
-    for n in names:
+    for data_index, n in enumerate(names):
+        if data["Train "][data_index] < 100:
+            continue
         params_copy = copy.deepcopy(params)
 
         params_copy["dataset_name"] = n

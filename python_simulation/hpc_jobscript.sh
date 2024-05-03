@@ -5,6 +5,7 @@
 #SBATCH --nodes=1 # request one node
 #SBATCH --account=rwth1581
 #SBATCH --cpus-per-task=8
+#SBATCH --partition=c23m
 #SBATCH --mail-type=FAIL
 #SBATCH --mail-user=alexander.graefe@dsme.rwth-aachen.de
 #SBATCH --mem-per-cpu=3GB # memory per node

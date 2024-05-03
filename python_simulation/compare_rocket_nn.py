@@ -74,7 +74,7 @@ if __name__ == "__main__":
     data = pd.read_csv(f"{Path.home()}/datasets/DataSummary.csv")
     names = data["Name"]
     #names = ["ElectricDevices", "NonInvasiveFetalECGThorax2", "Crop", "ChlorineConcentration"]
-    #names = ["OSULeaf"]
+    names = ["MelbournePedestrian"]
 
     lr = 0.001
 
@@ -87,12 +87,12 @@ if __name__ == "__main__":
         learning_rates = [0.001]
         color_idx = 0
         for i in range(10):
-            name_dataset_seed = f"{name_dataset}_{i}_test"
+            name_dataset_seed = f"archive_hpc/{name_dataset}_{i}_test"
             label = get_logger_name(name_dataset_seed, use_cocob=False, learning_rate=lr, use_rocket=True)
             plot_data(label, colors[color_idx], label=label)
         color_idx += 1
         for i in range(10):
-            name_dataset_seed = f"{name_dataset}_{i}_test"
+            name_dataset_seed = f"archive_hpc/{name_dataset}_{i}_test"
             label = get_logger_name(name_dataset_seed, use_cocob=False, learning_rate=lr, use_rocket=False)
             plot_data(label, colors[color_idx], label=label)
         color_idx += 1
