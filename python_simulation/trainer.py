@@ -136,7 +136,8 @@ class Trainer:
                 labels = batch["target"].to(device)
                 print(batch_nr)
                 if at_least_one_batch and self.__params["batch_size"] > len(X_transform):
-                    continue
+                    pass
+                    #continue
                 at_least_one_batch = True
 
                 self.__optimizer.zero_grad()
