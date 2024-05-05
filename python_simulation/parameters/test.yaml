@@ -8,7 +8,7 @@ num_layers: 4
 # dataset global options
 dataset_name: MelbournePedestrian # ChlorineConcentration # NonInvasiveFetalECGThorax2
 train_size: 0.8
-dataloader_num_workers: 8
+dataloader_num_workers: 1
 
 # optimizer options
 batch_size: 128
