@@ -170,6 +170,7 @@ class ClassificationDataset:
             X_train = normalize(X_train, self.data_std, self.data_mean)
             X_test = normalize(X_test, self.data_std, self.data_mean)
             print(self.data_std)
+            print(X_train)
             assert False
 
 
