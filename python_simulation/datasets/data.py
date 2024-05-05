@@ -169,6 +169,8 @@ class ClassificationDataset:
 
             X_train = normalize(X_train, self.data_std, self.data_mean)
             X_test = normalize(X_test, self.data_std, self.data_mean)
+            print(self.data_std)
+            assert False
 
 
         size_training = int(round(len(X_train) * params["train_size"]))
