@@ -167,21 +167,15 @@ class ClassificationDataset:
             self.data_mean = np.mean(X_train)
             self.data_std = np.std(X_train)
 
-            print(self.data_std)
-            print(X_train)
-
             X_train = normalize(X_train, self.data_std, self.data_mean)
             X_test = normalize(X_test, self.data_std, self.data_mean)
-            print(self.data_std)
-            print(X_train)
-            assert False
-
 
         size_training = int(round(len(X_train) * params["train_size"]))
 
         self.num_classes = int(round(max(y_train)))
         y_test -= 1
         y_train -= 1
+
         self.length_timeseries = len(X_train[0])
 
         if params["use_rocket"]:
