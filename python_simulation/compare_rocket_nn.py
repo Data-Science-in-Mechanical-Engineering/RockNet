@@ -68,8 +68,8 @@ def plot_comparison_entire_dataset():
 
 
 if __name__ == "__main__":
-    #plot_comparison_entire_dataset()
-    #exit(0)
+    plot_comparison_entire_dataset()
+    exit(0)
 
     #data = pd.read_csv(f"{Path.home()}/datasets/DataSummary.csv")
     #names = data["Name"]

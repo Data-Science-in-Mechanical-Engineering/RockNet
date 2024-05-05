@@ -134,7 +134,7 @@ class Trainer:
                 #X_transform = transform(batch["input"].numpy(), rocket_parameters)
                 X_transform = batch["input"].to(device)
                 labels = batch["target"].to(device)
-
+                print(batch_nr)
                 if at_least_one_batch and self.__params["batch_size"] > len(X_transform):
                     continue
                 at_least_one_batch = True
