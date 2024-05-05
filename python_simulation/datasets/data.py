@@ -40,6 +40,8 @@ def load_ucr_dataset(name, test=False):
 
     X = np.array(data[data.columns[1:]])
     y = np.array(data[data.columns[0]])
+    print(y.dtype)
+    assert False
 
     # shuffle data
     shuffle_vec = np.array([i for i in range(len(y))])
@@ -51,7 +53,8 @@ def load_ucr_dataset(name, test=False):
     y_unique = np.unique(y)
     if len(y_unique) == 2:
         if np.all(np.unique(y) == [-1, 1]):
-            y[y==-1] = 0
+            y[y == 1] = 2
+            y[y==-1] = 1
 
     return np.array(X, dtype=np.float32), np.array(y, dtype=np.int64)
 
