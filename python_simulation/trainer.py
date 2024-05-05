@@ -55,7 +55,7 @@ def get_dataloader(
         batch_size=batch_size,
         num_workers=num_workers,
         pin_memory=pin_memory,
-        shuffle=True,
+        shuffle=False,
         **kwargs)
 
 def get_accuracy(y_pred, labels):
