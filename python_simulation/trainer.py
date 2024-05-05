@@ -60,8 +60,6 @@ def get_dataloader(
 
 def get_accuracy(y_pred, labels):
     _, predicted = torch.max(y_pred, dim=1)
-    print(labels)
-    print(predicted)
     return (predicted == labels).sum() / len(labels)
 
 
@@ -217,8 +215,6 @@ class Trainer:
             num_datapoints += len(batch["input"])
         validation_loss /= num_datapoints
         accuracy /= num_datapoints
-        print(num_datapoints)
-        print(",,,,,,,")
         return validation_loss, accuracy
 
 
