@@ -36,7 +36,12 @@ def load_ucr_dataset(name, test=False):
                     header=None))
 
     # remove NANs by interpolation
-    # data = data.interpolate(axis=1)
+    data = data.interpolate(axis=1)
+
+    for d in data:
+        print(d)
+
+    assert False
 
     X = np.array(data[data.columns[1:]])
     y = np.array(data[data.columns[0]], dtype=np.int64)
