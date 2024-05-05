@@ -167,6 +167,9 @@ class ClassificationDataset:
             self.data_mean = np.mean(X_train)
             self.data_std = np.std(X_train)
 
+            print(self.data_std)
+            print(X_train)
+
             X_train = normalize(X_train, self.data_std, self.data_mean)
             X_test = normalize(X_test, self.data_std, self.data_mean)
             print(self.data_std)
