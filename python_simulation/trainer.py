@@ -15,8 +15,6 @@ import torch.nn as nn
 import torch.optim as optim
 from torch.utils import data
 
-from tqdm import tqdm
-
 from rocket.minirocket import fit, transform
 
 from optimizer.cocob import COCOB_Backprop
@@ -216,6 +214,8 @@ class Trainer:
             num_datapoints += len(batch["input"])
         validation_loss /= num_datapoints
         accuracy /= num_datapoints
+        print(num_datapoints)
+        print(",,,,,,,")
         return validation_loss, accuracy
 
 
