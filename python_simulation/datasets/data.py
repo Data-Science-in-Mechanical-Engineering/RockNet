@@ -39,9 +39,7 @@ def load_ucr_dataset(name, test=False):
     data = data.interpolate(axis=1)
 
     X = np.array(data[data.columns[1:]])
-    y = np.array(data[data.columns[0]])
-    print(y.dtype)
-    assert False
+    y = np.array(data[data.columns[0]], dtype=np.int64)
 
     # shuffle data
     shuffle_vec = np.array([i for i in range(len(y))])
