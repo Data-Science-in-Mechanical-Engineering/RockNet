@@ -135,7 +135,7 @@ class Trainer:
                 #X_transform = transform(batch["input"].numpy(), rocket_parameters)
                 X_transform = batch["input"].to(device)
                 labels = batch["target"].to(device)
-                print(batch_nr)
+
                 if at_least_one_batch and self.__params["batch_size"] > len(X_transform):
                     pass
                     #continue
@@ -211,7 +211,6 @@ class Trainer:
             l = self.__loss_function(_Y_validation, labels)
             validation_loss += l * len(batch["input"])
 
-            print(get_accuracy(_Y_validation, labels))
             accuracy += get_accuracy(_Y_validation, labels) * len(batch["input"])
 
             num_datapoints += len(batch["input"])
