@@ -38,8 +38,7 @@ def load_ucr_dataset(name, test=False):
     # remove NANs by interpolation
     data = data.interpolate(axis=1)
 
-    for d in data:
-        print(d)
+    print(data)
 
     assert False
 
