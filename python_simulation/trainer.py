@@ -60,7 +60,7 @@ def get_dataloader(
 
 def get_accuracy(y_pred, labels):
     _, predicted = torch.max(y_pred, dim=1)
-    printf(labels)
+    printflabels)
     return (predicted == labels).sum() / len(labels)
 
 
