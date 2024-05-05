@@ -130,6 +130,7 @@ class Trainer:
             loss = 0
             num_datapoints = 0
             at_least_one_batch = False
+            self.__model.train()
             for batch_nr, batch in enumerate(self.__train_dl):
                 #X_transform = transform(batch["input"].numpy(), rocket_parameters)
                 X_transform = batch["input"].to(device)
