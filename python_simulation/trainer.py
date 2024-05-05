@@ -209,6 +209,7 @@ class Trainer:
             l = self.__loss_function(_Y_validation, labels)
             validation_loss += l * len(batch["input"])
 
+            print(get_accuracy(_Y_validation, labels))
             accuracy += get_accuracy(_Y_validation, labels) * len(batch["input"])
 
             num_datapoints += len(batch["input"])
