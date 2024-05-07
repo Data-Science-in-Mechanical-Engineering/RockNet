@@ -122,7 +122,7 @@ GPI_TRACE_CONFIG(main, GPI_TRACE_BASE_SELECTION);
 #define TALK_WITH_AP 1
 #define USE_SPI 1  // if using spi, debug messages will be sent via UART. Otherwise UART is used as communication with AP
 
-#define DISABLE_BOLT
+// #define DISABLE_BOLT
 
 //**************************************************************************************************
 //***** Local Typedefs and Class Declarations ******************************************************
@@ -166,7 +166,7 @@ static uint32_t			all_radio_on_time[MX_GENERATION_SIZE - 1]; // subtract control
 // ATTENTION: it is important to have TOS_NODE_ID in .data (not in .bss), otherwise tos-set-symbol
 // will not work
 uint16_t __attribute__((section(".data")))	TOS_NODE_ID = 0;
-#define THIS_NODE_ID 1
+#define THIS_NODE_ID 2
 
 //**************************************************************************************************
 //***** Global Functions ****************************************************************************
@@ -537,6 +537,38 @@ static void initialization(void)
         printf("AP has a time window of %" PRIu32 " us for calculation and writing to Bolt.\n", gpi_tick_hybrid_to_us(app_time));
 
         #endif
+
+	#if DNNI_PWR_MEASUREMENTS
+		NRF_GPIOTE->CONFIG[0] =
+			BV_BY_NAME(GPIOTE_CONFIG_MODE, Task)		|
+			BV_BY_VALUE(GPIOTE_CONFIG_PSEL, 1)			|
+			BV_BY_VALUE(GPIOTE_CONFIG_PORT, 1)			|
+			BV_BY_NAME(GPIOTE_CONFIG_POLARITY, Toggle)	|
+			BV_BY_NAME(GPIOTE_CONFIG_OUTINIT, Low);
+		// NRF_P1->PIN_CNF[1] =
+		//     BV_BY_NAME(GPIO_PIN_CNF_DIR, Output) | BV_BY_NAME(GPIO_PIN_CNF_INPUT, Disconnect) |
+		//     BV_BY_NAME(GPIO_PIN_CNF_PULL, Disabled) | BV_BY_NAME(GPIO_PIN_CNF_DRIVE, S0S1) |
+		//     BV_BY_NAME(GPIO_PIN_CNF_SENSE, Disabled);
+		NRF_GPIOTE->CONFIG[1] =
+			BV_BY_NAME(GPIOTE_CONFIG_MODE, Task)		|
+			BV_BY_VALUE(GPIOTE_CONFIG_PSEL, 2)			|
+			BV_BY_VALUE(GPIOTE_CONFIG_PORT, 1)			|
+			BV_BY_NAME(GPIOTE_CONFIG_POLARITY, Toggle)	|
+			BV_BY_NAME(GPIOTE_CONFIG_OUTINIT, Low);
+		// NRF_P1->PIN_CNF[2] =
+		//     BV_BY_NAME(GPIO_PIN_CNF_DIR, Output) | BV_BY_NAME(GPIO_PIN_CNF_INPUT, Disconnect) |
+		//     BV_BY_NAME(GPIO_PIN_CNF_PULL, Disabled) | BV_BY_NAME(GPIO_PIN_CNF_DRIVE, S0S1) |
+		//     BV_BY_NAME(GPIO_PIN_CNF_SENSE, Disabled);
+		NRF_P1->PIN_CNF[3] =
+			BV_BY_NAME(GPIO_PIN_CNF_DIR, Output) | BV_BY_NAME(GPIO_PIN_CNF_INPUT, Disconnect) |
+			BV_BY_NAME(GPIO_PIN_CNF_PULL, Disabled) | BV_BY_NAME(GPIO_PIN_CNF_DRIVE, S0S1) |
+			BV_BY_NAME(GPIO_PIN_CNF_SENSE, Disabled);
+		NRF_P1->PIN_CNF[4] =
+			BV_BY_NAME(GPIO_PIN_CNF_DIR, Output) | BV_BY_NAME(GPIO_PIN_CNF_INPUT, Disconnect) |
+			BV_BY_NAME(GPIO_PIN_CNF_PULL, Disabled) | BV_BY_NAME(GPIO_PIN_CNF_DRIVE, S0S1) |
+			BV_BY_NAME(GPIO_PIN_CNF_SENSE, Disabled);
+	#endif //DNNI_PWR_MEASUREMENTS
+
 	mixer_print_config();
         
 }

@@ -82,4 +82,25 @@
 	#define CLR_COM_GPIO2()
 #endif
 
+#define DNNI_PWR_MEASUREMENTS 0
+#if DNNI_PWR_MEASUREMENTS
+	#define SET_TX_PIN() (NRF_P1->OUTSET = BV(1))
+	#define CLR_TX_PIN() (NRF_P1->OUTCLR = BV(1))
+	#define SET_RX_PIN() (NRF_P1->OUTSET = BV(2))
+	#define CLR_RX_PIN() (NRF_P1->OUTCLR = BV(2))
+	#define SET_LOWPWR_PIN() (NRF_P1->OUTSET = BV(3))
+	#define CLR_LOWPWR_PIN() (NRF_P1->OUTCLR = BV(3))
+	#define SET_INFERENCE_PIN() (NRF_P1->OUTSET = BV(4))
+	#define CLR_INFERENCE_PIN() (NRF_P1->OUTCLR = BV(4))
+#else
+	#define SET_TX_PIN()
+	#define CLR_TX_PIN()
+	#define SET_RX_PIN()
+	#define CLR_RX_PIN()
+	#define SET_LOWPWR_PIN()
+	#define CLR_LOWPWR_PIN()
+	#define SET_INFERENCE_PIN()
+	#define CLR_INFERENCE_PIN()
+#endif // DNNI_PWR_MEASUREMENTS
+
 #endif // __MIXER_CONFIG_H__
