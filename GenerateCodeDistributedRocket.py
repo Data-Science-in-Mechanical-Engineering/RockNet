@@ -369,18 +369,18 @@ def calculate_RAM(dilations, num_biases_per_kernel, kernels, num_classes, multip
 
 if __name__ == "__main__":
 	# len_timeseries = 101
-	num_nodes = 13
+	num_nodes = 1
 	quantize = True
 
 	# data, labels = generate_data(len_timeseries, quantize)
 	np.random.seed(1)
-	data_training, labels_training = generate_data_ucr(num_trajectories=8500, name_dataset="OSULeaf", test=False)
-	data_test, labels_test = generate_data_ucr(num_trajectories=242, name_dataset="OSULeaf", test=True)
+	"""data_training, labels_training = generate_data_ucr(num_trajectories=8500, name_dataset="OSULeaf", test=False)
+	data_test, labels_test = generate_data_ucr(num_trajectories=242, name_dataset="OSULeaf", test=True)"""
 
-	"""data_training, labels_training = generate_data_ucr(num_trajectories=2200, name_dataset="ElectricDevices", test=False)
+	data_training, labels_training = generate_data_ucr(num_trajectories=2200, name_dataset="ElectricDevices", test=False)
 	data_test, labels_test = generate_data_ucr(num_trajectories=200, name_dataset="ElectricDevices", test=True)
 
-	data_training, labels_training = generate_data_ucr(num_trajectories=2200, name_dataset="MelbournePedestrian",
+	"""data_training, labels_training = generate_data_ucr(num_trajectories=2200, name_dataset="MelbournePedestrian",
 													   test=False)
 	data_test, labels_test = generate_data_ucr(num_trajectories=200, name_dataset="MelbournePedestrian", test=True)"""
 
@@ -403,11 +403,11 @@ if __name__ == "__main__":
 
 	print("-------------")
 
-	#offsets = {1: 0, 3: 0, 5: 244.8, 6: 204.1, 7: 177.1, 8: 163.6, 9: 150.1, 10: 136.7, 11: 123.2, 12: 109.7, 13: 109.8, 14: 96.4, 15: 96.5,
-			   #16: 96.6, 17: 83.2, 18: 83.3, 19: 83.4, 20: 83.5}  # ElectricDevices
+	offsets = {1: 0, 3: 0, 5: 244.8, 6: 204.1, 7: 177.1, 8: 163.6, 9: 150.1, 10: 136.7, 11: 123.2, 12: 109.7, 13: 109.8, 14: 96.4, 15: 96.5,
+			   16: 96.6, 17: 83.2, 18: 83.3, 19: 83.4, 20: 83.5}  # ElectricDevices
 
-	offsets = {1: 0, 3: 0, 5: 209.1, 7: 151.4, 9: 128.5, 11: 105.6, 13: 94.3,
-			   15: 83.0, 17: 71.6, 19: 71.9}  # OSULeaf
+	#offsets = {1: 0, 3: 0, 5: 209.1, 7: 151.4, 9: 128.5, 11: 105.6, 13: 94.3,
+	#		   15: 83.0, 17: 71.6, 19: 71.9}  # OSULeaf
 
 	#offsets = {1: 0, 3: 0, 5: 209.1, 7: 241.2, 9: 202.7, 11: 164.2, 13: 145.1,
 			   #15: 126.0, 17: 106.9, 19: 107.1}  # Melbourne Pedestrian

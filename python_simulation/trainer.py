@@ -67,6 +67,8 @@ class Trainer:
     def __init__(self, params, seed):
         self.__params = params
         self.__seed = seed
+        np.random.seed(seed)
+        torch.random.manual_seed(seed)
         self.__classification_dataset = ClassificationDataset(self.__params, seed)
 
         self.__train_dl = get_dataloader(self.__classification_dataset.train_ds,

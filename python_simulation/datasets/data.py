@@ -104,8 +104,6 @@ def quantize_8_bit(data, offset, scaling):
 
 class ClassificationDataset:
     def __init__(self, params, seed):
-        np.random.seed(seed)
-        torch.random.manual_seed(seed)
         print(f"Starting to load dataset {params['dataset_name']}...")
         self.params = params
 

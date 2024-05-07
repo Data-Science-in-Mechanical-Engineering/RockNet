@@ -62,19 +62,22 @@ def plot_comparison_entire_dataset():
     plt.plot([0, 1], [0, 1], 'k')
     plt.show()
 
+    print(np.sum(results[:, 0] > results[:, 1]) / len(results[:, 1]))
+
     data = {"accRocket": results[:, 0], "accNN": results[:, 1]}
     df = pd.DataFrame(data)
     df.to_csv("results/plots/ComparisonNNROCKET.csv")
 
 
 if __name__ == "__main__":
-    plot_comparison_entire_dataset()
-    exit(0)
+    #plot_comparison_entire_dataset()
+    #exit(0)
 
-    #data = pd.read_csv(f"{Path.home()}/datasets/DataSummary.csv")
-    #names = data["Name"]
+    data = pd.read_csv(f"{Path.home()}/datasets/DataSummary.csv")
+
+    names = data["Name"]
     #names = ["ElectricDevices", "NonInvasiveFetalECGThorax2", "Crop", "ChlorineConcentration"]
-    names = ["MelbournePedestrian"]
+    #names = ["MelbournePedestrian"]
 
     lr = 0.001
 
