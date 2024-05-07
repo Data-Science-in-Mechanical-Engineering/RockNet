@@ -12,31 +12,37 @@ typedef struct message_assignment_t_tag
 	uint16_t size_end; // the size of the piece of the message in the mixer message at index mixer_assignment_end-1
 } message_assignment_t;
 
-static const uint8_t nodes[] = {  1,  2,  3,  4,  5,  6,  7,  8,  9,  10,  11,  12,  13,  14, };
-static const uint8_t rocket_nodes[] = {  1,  2,  3,  4,  5,  6,  7,  8,  9,  10,  11,  12,  13, };
+static const uint8_t nodes[] = {  1,  2,  3,  4,  5,  6,  7,  8,  9,  10,  11,  12,  13,  14,  15,  16,  17,  18,  19,  20, };
+static const uint8_t rocket_nodes[] = {  1,  2,  3,  4,  5,  6,  7,  8,  9,  10,  11,  12,  13,  14,  15,  16,  17,  18,  19, };
 
 static message_assignment_t message_assignment[] = {
- {.id=254, .size=431},
- {.id=1, .size=26},
- {.id=2, .size=26},
- {.id=3, .size=26},
- {.id=4, .size=26},
- {.id=5, .size=26},
- {.id=6, .size=26},
- {.id=7, .size=26},
- {.id=8, .size=26},
- {.id=9, .size=26},
- {.id=10, .size=26},
- {.id=11, .size=26},
- {.id=12, .size=26},
- {.id=13, .size=26},
+ {.id=254, .size=304},
+ {.id=1, .size=50},
+ {.id=2, .size=50},
+ {.id=3, .size=50},
+ {.id=4, .size=50},
+ {.id=5, .size=50},
+ {.id=6, .size=50},
+ {.id=7, .size=50},
+ {.id=8, .size=50},
+ {.id=9, .size=50},
+ {.id=10, .size=50},
+ {.id=11, .size=50},
+ {.id=12, .size=50},
+ {.id=13, .size=50},
+ {.id=14, .size=50},
+ {.id=15, .size=50},
+ {.id=16, .size=50},
+ {.id=17, .size=50},
+ {.id=18, .size=50},
+ {.id=19, .size=50},
  };
 
 #define MX_PAYLOAD_SIZE 100
 #define MX_ROUND_LENGTH 150
 #define MX_SLOT_LENGTH GPI_TICK_US_TO_HYBRID2(681)
-#define ROUND_LENGTH_MS            ((150*MX_SLOT_LENGTH / (GPI_HYBRID_CLOCK_RATE / 1000000)) / 1000 + 160) // 149
-#define MX_GENERATION_SIZE 19
+#define ROUND_LENGTH_MS            ((150*MX_SLOT_LENGTH / (GPI_HYBRID_CLOCK_RATE / 1000000)) / 1000 + 196)
+#define MX_GENERATION_SIZE 24
 
 #define AGGREGATE_FLAGS_SIZE (0)
 #define AGGREGATE_CONTENT_SIZE (0)

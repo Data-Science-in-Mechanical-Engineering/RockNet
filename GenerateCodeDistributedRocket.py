@@ -369,13 +369,13 @@ def calculate_RAM(dilations, num_biases_per_kernel, kernels, num_classes, multip
 
 if __name__ == "__main__":
 	# len_timeseries = 101
-	num_nodes = 13
+	num_nodes = 19
 	quantize = True
 
 	# data, labels = generate_data(len_timeseries, quantize)
 	np.random.seed(1)
-	data_training, labels_training = generate_data_ucr(num_trajectories=8500, name_dataset="OSULeaf", test=False)
-	data_test, labels_test = generate_data_ucr(num_trajectories=242, name_dataset="OSULeaf", test=True)
+	"""data_training, labels_training = generate_data_ucr(num_trajectories=8500, name_dataset="OSULeaf", test=False)
+	data_test, labels_test = generate_data_ucr(num_trajectories=242, name_dataset="OSULeaf", test=True)"""
 
 	"""data_training, labels_training = generate_data_ucr(num_trajectories=2200, name_dataset="ElectricDevices", test=False)
 	data_test, labels_test = generate_data_ucr(num_trajectories=200, name_dataset="ElectricDevices", test=True)
@@ -383,6 +383,10 @@ if __name__ == "__main__":
 	data_training, labels_training = generate_data_ucr(num_trajectories=2200, name_dataset="MelbournePedestrian",
 													   test=False)
 	data_test, labels_test = generate_data_ucr(num_trajectories=200, name_dataset="MelbournePedestrian", test=True)"""
+
+	data_training, labels_training = generate_data_ucr(num_trajectories=2200, name_dataset="CricketX",
+													   test=False)
+	data_test, labels_test = generate_data_ucr(num_trajectories=200, name_dataset="CricketX", test=True)
 
 	len_timeseries = len(data_training[0])
 
@@ -412,9 +416,12 @@ if __name__ == "__main__":
 	#offsets = {1: 0, 3: 0, 5: 209.1, 7: 241.2, 9: 202.7, 11: 164.2, 13: 145.1,
 			   #15: 126.0, 17: 106.9, 19: 107.1}  # Melbourne Pedestrian
 
+	offsets = {1: 0, 3: 0, 5: 209.1, 7: 151.4, 9: 233.8, 11: 189.5, 13: 167.5,
+			   15: 145.5, 17: 123.5, 19: 123.7}  # CricketX
+
 	calculate_RAM(dilations, num_biases_per_kernel, kernels, num_classes, multiplier=4, offset=offsets)
 	print(num_classes)
-	exit(0)
+	#exit(0)
 
 	generate_code([data_training, labels_training], [data_test, labels_test], kernels, dilations, num_biases_per_kernel,
 				  quantiles(len(dilations) * len(kernels) * num_biases_per_kernel),

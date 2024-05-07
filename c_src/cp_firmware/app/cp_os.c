@@ -154,12 +154,6 @@ void run_rounds(uint8_t (*communication_finished_callback)(ap_message_t*, uint16
 
     // sometimes communication ends a bit earlier, when agent has received everything and its neightbours too.
     while (gpi_tick_compare_hybrid(gpi_tick_hybrid(), SYNC_OFFSET(t_ref)) < 0);
-    // ticks_start = gpi_tick_hybrid() - ticks_start;
-    // ticks_start = gpi_tick_hybrid_to_us(ticks_start);
-    // if (TOS_NODE_ID != 1) {
-    //   //printf("c: %u\n", ticks_start);
-    // }
-    // ticks_start = gpi_tick_hybrid();
     SET_COM_LED();
 
       
@@ -174,7 +168,6 @@ void run_rounds(uint8_t (*communication_finished_callback)(ap_message_t*, uint16
     for (uint16_t i = 0; i < NUM_ELEMENTS(message_assignment); i++) {
       // write data in array, when message was received
       messages_received_idx += message_layer_get_message(message_assignment[i].id, (uint8_t *) &mixer_messages_received[messages_received_idx]);
-      // printf("%u / %u \r\n", messages_received_idx, NUM_ELEMENTS(message_assignment));
     }
         
     // synchronize to the initiator node
@@ -189,20 +182,20 @@ void run_rounds(uint8_t (*communication_finished_callback)(ap_message_t*, uint16
       }
     }
 
-	print_time = gpi_tick_hybrid();
-	// printing
+    print_time = gpi_tick_hybrid();
+    // printing
     mixer_print_statistics();
-	uint8_t rank = 0;
-	for (unsigned i = 0; i < MX_GENERATION_SIZE; i++)
-	{
-		if (mixer_stat_slot(i) >= 0) ++rank;
-	}
+    uint8_t rank = 0;
+    for (unsigned i = 0; i < MX_GENERATION_SIZE; i++)
+    {
+            if (mixer_stat_slot(i) >= 0) ++rank;
+    }
 
-	PRINT_HEADER();    
-	printf("round=%" PRIu32 " rank=%" PRIu8 " start_cb_time=%" PRIu32 "us finished_cb_time=%" PRIu32 "us",
-		round_nr, rank, gpi_tick_hybrid_to_us(start_cb_time), gpi_tick_hybrid_to_us(finished_cb_time));
-	print_time = gpi_tick_hybrid() - print_time;
-	printf(" print_time=%" PRIu32 "us\n", gpi_tick_hybrid_to_us(print_time));
+    PRINT_HEADER();    
+    printf("round=%" PRIu32 " rank=%" PRIu8 " start_cb_time=%" PRIu32 "us finished_cb_time=%" PRIu32 "us",
+            round_nr, rank, gpi_tick_hybrid_to_us(start_cb_time), gpi_tick_hybrid_to_us(finished_cb_time));
+    print_time = gpi_tick_hybrid() - print_time;
+    printf(" print_time=%" PRIu32 "us\n", gpi_tick_hybrid_to_us(print_time));
 
 
     #if DEVICE_ID == 1
@@ -218,12 +211,12 @@ void run_rounds(uint8_t (*communication_finished_callback)(ap_message_t*, uint16
     mixer_messages_received[messages_received_idx].metadata_message.round_nmbr = round_nr;
     messages_received_idx += 1; // local or initiator message?
 
-	finished_cb_time = gpi_tick_hybrid();
+    finished_cb_time = gpi_tick_hybrid();
     // process received data (e.g. send it to AP) and finish, if the callback says so.
     if (communication_finished_callback(mixer_messages_received, messages_received_idx)) {
       break;
     }
-	finished_cb_time = gpi_tick_hybrid() - finished_cb_time;
+    finished_cb_time = gpi_tick_hybrid() - finished_cb_time;
   }
 }
 
