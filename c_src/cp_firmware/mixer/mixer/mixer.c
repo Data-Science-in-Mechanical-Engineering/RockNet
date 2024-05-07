@@ -533,7 +533,9 @@ Gpi_Hybrid_Tick mixer_start()
 
 						// enter sleep mode
 						// NOTE: reenables interrupts (they serve as wake-up events)
+						SET_LOWPWR_PIN();
 						gpi_sleep();
+						CLR_LOWPWR_PIN();
 
 						// ...
 						// awake again
@@ -575,6 +577,8 @@ void mixer_print_statistics(void)
 {
 	#if MX_VERBOSE_STATISTICS
 		mx.stat_counter.radio_on_time /= FAST_HYBRID_RATIO;
+		mx.stat_counter.radio_TX_time /= FAST_HYBRID_RATIO;
+		mx.stat_counter.radio_RX_time /= FAST_HYBRID_RATIO;
 
 		#ifdef PRINT
 			#error change macro name
@@ -618,6 +622,8 @@ void mixer_print_statistics(void)
 			printf(#n ": %luus\n", (unsigned long)gpi_tick_hybrid_to_us(mx.stat_counter.n))
 
 		PRINT(radio_on_time);
+		PRINT(radio_TX_time);
+		PRINT(radio_RX_time);
 		PRINT(low_power_time);
 
 		#undef PRINT

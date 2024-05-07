@@ -661,7 +661,9 @@ void LED_ISR(RADIO_IRQHandler, LED_RADIO_ISR)
 		#if MX_VERBOSE_STATISTICS
 //		if (s.radio_start_timestamp & 1)
 		{
-			mx.stat_counter.radio_on_time += gpi_tick_fast_native() - s.radio_start_timestamp;
+			Gpi_Hybrid_Tick t_diff = gpi_tick_fast_native() - s.radio_start_timestamp;
+			mx.stat_counter.radio_on_time += t_diff;
+			mx.stat_counter.radio_RX_time += t_diff;
 			s.radio_start_timestamp = 0;
 		}
 		#endif
@@ -919,7 +921,9 @@ void LED_ISR(RADIO_IRQHandler, LED_RADIO_ISR)
 		#if MX_VERBOSE_STATISTICS
 		// if (s.radio_start_timestamp & 1)
 		{
-			mx.stat_counter.radio_on_time += gpi_tick_fast_native() - s.radio_start_timestamp;
+			Gpi_Hybrid_Tick t_diff = gpi_tick_fast_native() - s.radio_start_timestamp;
+			mx.stat_counter.radio_on_time += t_diff;
+			mx.stat_counter.radio_TX_time += t_diff;
 			s.radio_start_timestamp = 0;
 		}
 		#endif
@@ -1006,7 +1010,9 @@ void LED_ISR(timeout_isr, LED_TIMEOUT_ISR)
 	#if MX_VERBOSE_STATISTICS
 	if (s.radio_start_timestamp & 1)
 	{
-		mx.stat_counter.radio_on_time += gpi_tick_fast_native() - s.radio_start_timestamp;
+		Gpi_Hybrid_Tick t_diff = gpi_tick_fast_native() - s.radio_start_timestamp;
+		mx.stat_counter.radio_on_time += t_diff;
+		mx.stat_counter.radio_RX_time += t_diff;
 		s.radio_start_timestamp = 0;
 	}
 	#endif
@@ -1106,6 +1112,10 @@ void LED_ISR(grid_timer_isr, LED_GRID_TIMER_ISR)
 			NRF_PPI->CH[NRF_PPI_CHANNEL].TEP =
 				(uintptr_t)&(NRF_RADIO->TASKS_RXEN);
 			NRF_PPI->CHENSET = BV(NRF_PPI_CHANNEL);
+			#if DNNI_PWR_MEASUREMENTS
+				NRF_PPI->FORK[NRF_PPI_CHANNEL].TEP =
+					(uintptr_t)&(NRF_GPIOTE->TASKS_SET[1]);
+			#endif
 
 			// wait until trigger time has been reached
 			PROFILE_ISR();
@@ -1133,6 +1143,9 @@ void LED_ISR(grid_timer_isr, LED_GRID_TIMER_ISR)
 		if (late)
 		{
 			NRF_RADIO->TASKS_RXEN = 1;
+			#if DNNI_PWR_MEASUREMENTS
+				NRF_GPIOTE->TASKS_SET[1] = 1;
+			#endif
 
 			#if MX_VERBOSE_STATISTICS
 				trigger_tick = gpi_tick_fast_native();
@@ -1234,6 +1247,10 @@ void LED_ISR(grid_timer_isr, LED_GRID_TIMER_ISR)
 			(uintptr_t)&(MAIN_TIMER->EVENTS_COMPARE[MAIN_TIMER_CC_INDEX]);
 		NRF_PPI->CH[NRF_PPI_CHANNEL].TEP =
 			(uintptr_t)&(NRF_RADIO->TASKS_TXEN);
+		#if DNNI_PWR_MEASUREMENTS
+			NRF_PPI->FORK[NRF_PPI_CHANNEL].TEP =
+				(uintptr_t)&(NRF_GPIOTE->TASKS_SET[0]);
+		#endif
 		NRF_PPI->CHENSET = BV(NRF_PPI_CHANNEL);
 
 		// wait until trigger time has been reached
@@ -1256,6 +1273,9 @@ void LED_ISR(grid_timer_isr, LED_GRID_TIMER_ISR)
 		if (late)
 		{
 			NRF_RADIO->TASKS_TXEN = 1;
+			#if DNNI_PWR_MEASUREMENTS
+				NRF_GPIOTE->TASKS_SET[0] = 1;
+			#endif
 
 			#if MX_VERBOSE_STATISTICS
 				trigger_tick = gpi_tick_fast_native();
@@ -1642,7 +1662,9 @@ void LED_ISR(grid_timer_isr, LED_GRID_TIMER_ISR)
 			gpi_led_off(LED_TX);
 
 			#if MX_VERBOSE_STATISTICS
-				mx.stat_counter.radio_on_time += gpi_tick_fast_native() - s.radio_start_timestamp;
+				Gpi_Hybrid_Tick t_diff = gpi_tick_fast_native() - s.radio_start_timestamp;
+				mx.stat_counter.radio_on_time += t_diff;
+				mx.stat_counter.radio_TX_time += t_diff;
 				s.radio_start_timestamp = 0;
 				mx.stat_counter.num_tx_zero_packet++;
 			#endif
@@ -1722,6 +1744,13 @@ void mixer_transport_init()
 		BV_BY_NAME(RADIO_SHORTS_READY_START, Enabled) |
 		BV_BY_NAME(RADIO_SHORTS_END_DISABLE, Enabled) |
 		BV_BY_NAME(RADIO_SHORTS_ADDRESS_BCSTART, Enabled);
+
+	#if DNNI_PWR_MEASUREMENTS
+		NRF_PPI->CH[17].EEP = (uintptr_t)&(NRF_RADIO->EVENTS_DISABLED);
+		NRF_PPI->CH[17].TEP = (uintptr_t)&(NRF_GPIOTE->TASKS_CLR[0]);
+		NRF_PPI->FORK[17].TEP = (uintptr_t)&(NRF_GPIOTE->TASKS_CLR[1]);
+		NRF_PPI->CHENSET = BV(17);
+	#endif
 
 	// set MAXLEN to avoid Rx buffer overflows
 	NRF_RADIO->PCNF1 =

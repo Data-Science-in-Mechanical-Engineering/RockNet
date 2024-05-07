@@ -537,6 +537,38 @@ static void initialization(void)
         printf("AP has a time window of %" PRIu32 " us for calculation and writing to Bolt.\n", gpi_tick_hybrid_to_us(app_time));
 
         #endif
+
+	#if DNNI_PWR_MEASUREMENTS
+		NRF_GPIOTE->CONFIG[0] =
+			BV_BY_NAME(GPIOTE_CONFIG_MODE, Task)		|
+			BV_BY_VALUE(GPIOTE_CONFIG_PSEL, 1)			|
+			BV_BY_VALUE(GPIOTE_CONFIG_PORT, 1)			|
+			BV_BY_NAME(GPIOTE_CONFIG_POLARITY, Toggle)	|
+			BV_BY_NAME(GPIOTE_CONFIG_OUTINIT, Low);
+		// NRF_P1->PIN_CNF[1] =
+		//     BV_BY_NAME(GPIO_PIN_CNF_DIR, Output) | BV_BY_NAME(GPIO_PIN_CNF_INPUT, Disconnect) |
+		//     BV_BY_NAME(GPIO_PIN_CNF_PULL, Disabled) | BV_BY_NAME(GPIO_PIN_CNF_DRIVE, S0S1) |
+		//     BV_BY_NAME(GPIO_PIN_CNF_SENSE, Disabled);
+		NRF_GPIOTE->CONFIG[1] =
+			BV_BY_NAME(GPIOTE_CONFIG_MODE, Task)		|
+			BV_BY_VALUE(GPIOTE_CONFIG_PSEL, 2)			|
+			BV_BY_VALUE(GPIOTE_CONFIG_PORT, 1)			|
+			BV_BY_NAME(GPIOTE_CONFIG_POLARITY, Toggle)	|
+			BV_BY_NAME(GPIOTE_CONFIG_OUTINIT, Low);
+		// NRF_P1->PIN_CNF[2] =
+		//     BV_BY_NAME(GPIO_PIN_CNF_DIR, Output) | BV_BY_NAME(GPIO_PIN_CNF_INPUT, Disconnect) |
+		//     BV_BY_NAME(GPIO_PIN_CNF_PULL, Disabled) | BV_BY_NAME(GPIO_PIN_CNF_DRIVE, S0S1) |
+		//     BV_BY_NAME(GPIO_PIN_CNF_SENSE, Disabled);
+		NRF_P1->PIN_CNF[3] =
+			BV_BY_NAME(GPIO_PIN_CNF_DIR, Output) | BV_BY_NAME(GPIO_PIN_CNF_INPUT, Disconnect) |
+			BV_BY_NAME(GPIO_PIN_CNF_PULL, Disabled) | BV_BY_NAME(GPIO_PIN_CNF_DRIVE, S0S1) |
+			BV_BY_NAME(GPIO_PIN_CNF_SENSE, Disabled);
+		NRF_P1->PIN_CNF[4] =
+			BV_BY_NAME(GPIO_PIN_CNF_DIR, Output) | BV_BY_NAME(GPIO_PIN_CNF_INPUT, Disconnect) |
+			BV_BY_NAME(GPIO_PIN_CNF_PULL, Disabled) | BV_BY_NAME(GPIO_PIN_CNF_DRIVE, S0S1) |
+			BV_BY_NAME(GPIO_PIN_CNF_SENSE, Disabled);
+	#endif //DNNI_PWR_MEASUREMENTS
+	
 	mixer_print_config();
         
 }

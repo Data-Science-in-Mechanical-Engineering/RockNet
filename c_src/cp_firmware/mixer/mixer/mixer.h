@@ -127,6 +127,8 @@ typedef struct Mixer_Stat_Counter_tag
 	uint16_t			wake_up_slot;
 
 	Gpi_Hybrid_Tick		radio_on_time;
+	Gpi_Hybrid_Tick		radio_TX_time;
+	Gpi_Hybrid_Tick		radio_RX_time;
 	Gpi_Hybrid_Tick		low_power_time;
 
 #endif
