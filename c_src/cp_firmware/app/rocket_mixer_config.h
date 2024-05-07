@@ -35,7 +35,7 @@ static message_assignment_t message_assignment[] = {
 #define MX_PAYLOAD_SIZE 100
 #define MX_ROUND_LENGTH 150
 #define MX_SLOT_LENGTH GPI_TICK_US_TO_HYBRID2(681)
-#define ROUND_LENGTH_MS            ((150*MX_SLOT_LENGTH / (GPI_HYBRID_CLOCK_RATE / 1000000)) / 1000 + 149)
+#define ROUND_LENGTH_MS            ((150*MX_SLOT_LENGTH / (GPI_HYBRID_CLOCK_RATE / 1000000)) / 1000 + 160) // 149
 #define MX_GENERATION_SIZE 19
 
 #define AGGREGATE_FLAGS_SIZE (0)

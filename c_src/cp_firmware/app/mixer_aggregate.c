@@ -1,7 +1,7 @@
 #include "mixer_aggregate.h"
 #include "rocket_mixer_config.h"
 
-static uint8_t node_idx=-1u;
+static uint8_t node_idx=-1;
 
 static uint8_t full_flags[AGGREGATE_FLAGS_SIZE];
 

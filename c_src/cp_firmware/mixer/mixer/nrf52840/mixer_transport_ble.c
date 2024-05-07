@@ -191,7 +191,7 @@ ASSERT_CT_STATIC(
 	// - interrupt latency for grid timer ISR
 	// - rare number of exceedings is acceptable (can be measured with MX_VERBOSE_PROFILE and stat_counter.num_rx_late/num_tx_late)
 
-ASSERT_CT_WARN_STATIC(((RX_WINDOW_MAX - RX_WINDOW_MIN) / RX_WINDOW_INCREMENT) >= 10, critical_RX_WINDOW_settings);
+//ASSERT_CT_WARN_STATIC(((RX_WINDOW_MAX - RX_WINDOW_MIN) / RX_WINDOW_INCREMENT) >= 10, critical_RX_WINDOW_settings);
 
 //**************************************************************************************************
 

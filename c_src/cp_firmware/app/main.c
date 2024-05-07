@@ -122,7 +122,7 @@ GPI_TRACE_CONFIG(main, GPI_TRACE_BASE_SELECTION);
 #define TALK_WITH_AP 1
 #define USE_SPI 1  // if using spi, debug messages will be sent via UART. Otherwise UART is used as communication with AP
 
-#define DISABLE_BOLT
+// #define DISABLE_BOLT
 
 //**************************************************************************************************
 //***** Local Typedefs and Class Declarations ******************************************************
@@ -568,7 +568,7 @@ static void initialization(void)
 			BV_BY_NAME(GPIO_PIN_CNF_PULL, Disabled) | BV_BY_NAME(GPIO_PIN_CNF_DRIVE, S0S1) |
 			BV_BY_NAME(GPIO_PIN_CNF_SENSE, Disabled);
 	#endif //DNNI_PWR_MEASUREMENTS
-	
+
 	mixer_print_config();
         
 }
