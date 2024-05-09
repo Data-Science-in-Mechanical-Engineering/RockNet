@@ -77,7 +77,7 @@ if __name__ == "__main__":
 
     names = data["Name"]
     #names = ["ElectricDevices", "NonInvasiveFetalECGThorax2", "Crop", "ChlorineConcentration"]
-    #names = ["MelbournePedestrian"]
+    #names = ["CricketX"]
 
     lr = 0.001
 
@@ -89,12 +89,12 @@ if __name__ == "__main__":
         plt.figure(figsize=(4,4))
         learning_rates = [0.001]
         color_idx = 0
-        for i in range(10):
+        for i in range(1,2):
             name_dataset_seed = f"{name_dataset}_{i}_test"
             label = get_logger_name(name_dataset_seed, use_cocob=False, learning_rate=lr, use_rocket=True)
             plot_data(label, colors[color_idx], label=label)
         color_idx += 1
-        for i in range(10):
+        for i in range(1,2):
             name_dataset_seed = f"{name_dataset}_{i}_test"
             label = get_logger_name(name_dataset_seed, use_cocob=False, learning_rate=lr, use_rocket=False)
             plot_data(label, colors[color_idx], label=label)

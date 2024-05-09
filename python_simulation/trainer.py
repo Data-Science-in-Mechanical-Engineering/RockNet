@@ -68,7 +68,7 @@ class Trainer:
         self.__params = params
         self.__seed = seed
         np.random.seed(seed)
-        torch.random.manual_seed(seed)
+        torch.manual_seed(seed)
         self.__classification_dataset = ClassificationDataset(self.__params, seed)
 
         self.__train_dl = get_dataloader(self.__classification_dataset.train_ds,
@@ -251,7 +251,7 @@ if __name__ == "__main__":
     np.random.seed(1)
     parameter_path = "parameters/test.yaml"
     df = pd.read_csv(f"{Path.home()}/datasets/DataSummary.csv")
-    names = ["MelbournePedestrian"]
+    names = ["CricketX"]
     for n in names:
         with open(parameter_path, "r") as file:
             params = yaml.safe_load(file)

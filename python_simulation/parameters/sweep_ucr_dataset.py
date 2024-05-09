@@ -17,7 +17,8 @@ if __name__ == "__main__":
     i = 0
     for data_index, n in enumerate(names):
         if data["Train "][data_index] < 100:
-            continue
+            pass
+            # continue
         params_copy = copy.deepcopy(params)
 
         params_copy["dataset_name"] = n

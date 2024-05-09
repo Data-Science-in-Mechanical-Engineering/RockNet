@@ -2,7 +2,7 @@ show_print: True
 
 # model options
 use_rocket: True
-num_neurons: 10
+num_neurons: 15
 num_layers: 4
 
 # dataset global options

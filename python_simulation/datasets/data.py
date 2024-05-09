@@ -54,9 +54,10 @@ def load_ucr_dataset(name, test=False):
 
     y_unique = np.unique(y)
     if len(y_unique) == 2:
-        if np.all(np.unique(y) == [-1, 1]):
+        if np.all(y_unique == [-1, 1]):
             y[y == 1] = 2
             y[y==-1] = 1
+            assert False
 
     return np.array(X, dtype=np.float32), np.array(y, dtype=np.int64)
 
@@ -170,9 +171,13 @@ class ClassificationDataset:
 
         size_training = int(round(len(X_train) * params["train_size"]))
 
-        self.num_classes = int(round(max(y_train)))
-        y_test -= 1
-        y_train -= 1
+        if min(y_train) > 0:
+            y_test -= 1
+            y_train -= 1
+
+        self.num_classes = int(round(max(y_train))) + 1
+
+        print(y_test)
 
         self.length_timeseries = len(X_train[0])
 
@@ -190,7 +195,7 @@ class ClassificationDataset:
 
         self.train_ds = PartDataset(X_train[0:size_training, :], y_train[0:size_training])
         self.eval_ds = PartDataset(X_train[size_training:, :], y_train[size_training:])
-        self.test_ds = PartDataset(X_test, y_test)
+        self.test_ds = PartDataset(X_test[0:200], y_test[0:200])
 
         self.X_train = X_train
         self.y_train = y_train
