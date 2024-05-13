@@ -22,7 +22,7 @@ static message_assignment_t message_assignment[] = {
 #define MX_PAYLOAD_SIZE {{mx_payload_size}}
 #define MX_ROUND_LENGTH {{mx_round_length}}
 #define MX_SLOT_LENGTH GPI_TICK_US_TO_HYBRID2({{slot_length}})
-#define ROUND_LENGTH_MS            ((150*MX_SLOT_LENGTH / (GPI_HYBRID_CLOCK_RATE / 1000000)) / 1000 + {{calculation_duration}})
+#define ROUND_LENGTH_MS            ((MX_ROUND_LENGTH*MX_SLOT_LENGTH / (GPI_HYBRID_CLOCK_RATE / 1000000)) / 1000 + {{calculation_duration}})
 #define MX_GENERATION_SIZE {{mx_generation_size}}
 
 #define AGGREGATE_FLAGS_SIZE ({{aggregate_flag_size}})

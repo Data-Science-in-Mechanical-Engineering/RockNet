@@ -30,7 +30,7 @@ def normalize(x, std, mean):
     return (x - mean) / std
 
 
-def load_ucr_dataset(name, test=False):
+def load_ucr_dataset(name, test=False, num_trajectories=0):
     data = copy.deepcopy(
         pd.read_csv(f"{Path.home()}/datasets/{name}/{name}_{'TRAIN' if not test else 'TEST'}.tsv", sep="\t",
                     header=None))
@@ -59,7 +59,7 @@ def load_ucr_dataset(name, test=False):
             y[y==-1] = 1
             assert False
 
-    return np.array(X, dtype=np.float32), np.array(y, dtype=np.int64)
+    return np.array(X, dtype=np.float32)[:num_trajectories], np.array(y, dtype=np.int64)[:num_trajectories]
 
 
 class MnistDataloader(object):
@@ -153,8 +153,8 @@ class ClassificationDataset:
 
 
         else:
-            X_train, y_train = load_ucr_dataset(name=params["dataset_name"], test=False)
-            X_test, y_test = load_ucr_dataset(name=params["dataset_name"], test=True)
+            X_train, y_train = load_ucr_dataset(name=params["dataset_name"], test=False, num_trajectories=2200)
+            X_test, y_test = load_ucr_dataset(name=params["dataset_name"], test=True, num_trajectories=200)
 
             if params["use_rocket"]:
                 quantization_offset = np.mean(X_train)
@@ -168,6 +168,9 @@ class ClassificationDataset:
 
             X_train = normalize(X_train, self.data_std, self.data_mean)
             X_test = normalize(X_test, self.data_std, self.data_mean)
+
+        """X_train = X_train[0:2200]
+        y_train = y_train[0:2200]"""
 
         size_training = int(round(len(X_train) * params["train_size"]))
 
@@ -190,6 +193,7 @@ class ClassificationDataset:
         # X_test = torch.tensor(X_test, device="cuda:0")
         # y_train = torch.tensor(y_train, device="cuda:0")
         # y_test = torch.tensor(y_test, device="cuda:0")
+
 
         self.num_features = len(X_train[0])
 

@@ -202,11 +202,14 @@ static uint16_t communication_starts_callback(ap_message_t **data)
             ts = get_evaluation_timeseries()[current_evaluation_ts_idx];
             label = get_evaluation_labels()[current_evaluation_ts_idx];
           } else {
+            printf("%u\n", current_training_ts_idx);
             ts = get_training_timeseries()[current_training_ts_idx];
             label = get_training_labels()[current_training_ts_idx];
           }
         }
         break;
+      case IDLE:
+        return 1;
     }
     for (uint16_t j = 0; j < LENGTH_TIME_SERIES; j++) {
       data[1]->time_series_message.data[j] = ts[j];

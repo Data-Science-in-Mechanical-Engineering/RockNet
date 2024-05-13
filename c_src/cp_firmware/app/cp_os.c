@@ -9,6 +9,7 @@
 #include "gpi/clocks.h"
 #include "gpi/olf.h"
 #include "message_layer.h"
+#include "mixer/mixer_internal.h"
 #include <string.h>
 
 #define PRINT_HEADER()	printf("# ID:%u ", TOS_NODE_ID)
@@ -191,6 +192,8 @@ void run_rounds(uint8_t (*communication_finished_callback)(ap_message_t*, uint16
             if (mixer_stat_slot(i) >= 0) ++rank;
     }
 
+    printf("packet_air_time: %" PRIu32 "us\n", (2 + 4 + 2 + PHY_PAYLOAD_SIZE + 3) * 4);
+    printf("com_time: %" PRIu32 "us\n", (MX_ROUND_LENGTH*MX_SLOT_LENGTH / (GPI_HYBRID_CLOCK_RATE / 1000000)));
     PRINT_HEADER();    
     printf("round=%" PRIu32 " rank=%" PRIu8 " start_cb_time=%" PRIu32 "us finished_cb_time=%" PRIu32 "us",
             round_nr, rank, gpi_tick_hybrid_to_us(start_cb_time), gpi_tick_hybrid_to_us(finished_cb_time));

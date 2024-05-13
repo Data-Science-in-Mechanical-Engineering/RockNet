@@ -49,6 +49,12 @@ def plot_comparison_entire_dataset():
     data = pd.read_csv(f"{Path.home()}/datasets/DataSummary.csv")
     names = data["Name"]
     results = []
+    distance_to_boundary = []
+    boundary = np.array([1.0, 1.0])
+    boundary /= np.linalg.norm(boundary)
+    boundary_ort = np.array([-1.0, 1.0])
+    boundary_ort /= np.linalg.norm(boundary_ort)
+
     for n in names:
         for i in range(10):
             name_dataset_seed = f"{n}_{i}"
@@ -57,17 +63,21 @@ def plot_comparison_entire_dataset():
             if succ_nn and succ_rocket:
                 results.append([acc_rocket, acc_nn])
 
+                a = np.array([acc_rocket, acc_nn]) - boundary * np.dot(np.array([acc_rocket, acc_nn]), boundary)
+                #distance_to_boundary.append(np.dot(boundary_ort, a.flatten()))
+                distance_to_boundary.append(acc_nn/acc_rocket)
+
     results = np.array(results)
     plt.scatter(results[:, 0], results[:, 1])
     plt.plot([0, 1], [0, 1], 'k')
-    plt.show()
 
     print(np.sum(results[:, 0] > results[:, 1]) / len(results[:, 1]))
 
-    data = {"accRocket": results[:, 0], "accNN": results[:, 1]}
+    data = {"accRocket": results[:, 0]*100, "accNN": results[:, 1]*100, "distanceBoundary": distance_to_boundary}
     df = pd.DataFrame(data)
     df.to_csv("results/plots/ComparisonNNROCKET.csv")
 
+    plt.show()
 
 if __name__ == "__main__":
     #plot_comparison_entire_dataset()
@@ -77,7 +87,7 @@ if __name__ == "__main__":
 
     names = data["Name"]
     #names = ["ElectricDevices", "NonInvasiveFetalECGThorax2", "Crop", "ChlorineConcentration"]
-    #names = ["CricketX"]
+    names = ["FaceAll"]
 
     lr = 0.001
 
@@ -89,12 +99,12 @@ if __name__ == "__main__":
         plt.figure(figsize=(4,4))
         learning_rates = [0.001]
         color_idx = 0
-        for i in range(1,2):
+        for i in range(0,10):
             name_dataset_seed = f"{name_dataset}_{i}_test"
             label = get_logger_name(name_dataset_seed, use_cocob=False, learning_rate=lr, use_rocket=True)
             plot_data(label, colors[color_idx], label=label)
         color_idx += 1
-        for i in range(1,2):
+        for i in range(0,10):
             name_dataset_seed = f"{name_dataset}_{i}_test"
             label = get_logger_name(name_dataset_seed, use_cocob=False, learning_rate=lr, use_rocket=False)
             plot_data(label, colors[color_idx], label=label)
