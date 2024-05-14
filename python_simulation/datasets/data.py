@@ -194,10 +194,9 @@ class ClassificationDataset:
         # y_train = torch.tensor(y_train, device="cuda:0")
         # y_test = torch.tensor(y_test, device="cuda:0")
 
-
         self.num_features = len(X_train[0])
 
-        self.train_ds = PartDataset(X_train[0:size_training, :], y_train[0:size_training])
+        self.train_ds = PartDataset(X_train[:size_training], y_train[:size_training])
         self.eval_ds = PartDataset(X_train[size_training:, :], y_train[size_training:])
         self.test_ds = PartDataset(X_test[0:200], y_test[0:200])
 

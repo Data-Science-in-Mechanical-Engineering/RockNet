@@ -38,7 +38,8 @@ def init(layer):
 
 def init_nn(layer):
     if isinstance(layer, nn.Linear):
-        layer.weight.data.normal_(mean=0.0, std=1/math.sqrt(len(layer.weight)))
+        torch.nn.init.xavier_uniform(layer.weight)
+        #layer.weight.data.normal_(mean=0.0, std=1/math.sqrt(len(layer.weight)))
         nn.init.constant_(layer.bias.data, 0)
 
 
@@ -89,11 +90,11 @@ class Trainer:
         else:
 
             layers = [nn.Linear(self.__num_features, self.__params["num_neurons"],
-                                                   device=device), nn.ReLU()]
+                                                   device=device), nn.Tanh()]
 
             for i in range(self.__params["num_layers"]):
                 layers += [nn.Linear(self.__params["num_neurons"], self.__params["num_neurons"],
-                                     device=device), nn.ReLU()]
+                                     device=device), nn.Tanh()]
 
             layers += [nn.Linear(self.__params["num_neurons"], self.__classification_dataset.num_classes,
                                  device=device)]
@@ -103,10 +104,11 @@ class Trainer:
         self.__loss_function = nn.CrossEntropyLoss()
 
         if not self.__params["use_cocob"]:
-            self.__optimizer = optim.Adam(self.__model.parameters(), lr=params["learning_rate"])
+            self.__optimizer = optim.Adam(self.__model.parameters(), lr=params["learning_rate"], eps=1e-7)
             self.__scheduler = optim.lr_scheduler.ReduceLROnPlateau(self.__optimizer, factor=0.5, min_lr=1e-8,
                                                                     patience=params["patience_lr"])
         else:
+            assert False, "Deprecated"
             self.__optimizer = COCOB_Backprop(self.__model.parameters(), weight_decay=1e-6)
             self.print("Using COCOB")
 
@@ -121,11 +123,6 @@ class Trainer:
         self.__evaluation_accuracies = []
 
     def run(self):
-        # rocket_parameters = fit(self.__classification_dataset.X_train, 10_000)
-
-        best_validation_loss = 1000000000000000
-        stall_count = 0
-
         for epoch in range(self.__params["max_epochs"]):
             start = time.time()
             # train
@@ -150,14 +147,11 @@ class Trainer:
                 self.__optimizer.step()
                 loss += training_loss * len(batch["input"])
                 num_datapoints += len(batch["input"])
-                # print(len(batch["input"]))
-
 
             #validate
             self.__model.eval()
             validation_loss, validation_accuracy = self.eval(self.__eval_dl)
             self.__evaluation_accuracies.append(validation_accuracy.detach().cpu().numpy())
-
 
             _, test_accuracy = self.eval(self.__test_dl)
 
@@ -178,19 +172,6 @@ class Trainer:
                 with open(f"results/{file_name}", 'wb') as handle:
                     p.dump(self.__evaluation_accuracies, handle, protocol=p.HIGHEST_PROTOCOL)
 
-            if not self.__params["use_cocob"]:
-                self.__scheduler.step(validation_loss)
-
-            if validation_loss.item() >= best_validation_loss:
-                stall_count += 1
-                if stall_count >= self.__params["patience"]:
-                    print(f"\n<Stopped at Epoch {epoch + 1}>")
-                    break
-            else:
-                best_validation_loss = validation_loss.item()
-                self.__best_model = copy.deepcopy(self.__model)
-                stall_count = 0
-
             self.print(f"Epoch {epoch+1} took {time.time()-start},\n"
                        f"validation_accuracy={validation_accuracy*100},\n"
                        f"test_accuracy={test_accuracy*100}%,\n"
@@ -208,6 +189,7 @@ class Trainer:
             # X_transform = transform(batch["input"].numpy(), rocket_parameters)
             X_transform = batch["input"].to(device)
             labels = batch["target"].to(device)
+
 
             _Y_validation = self.__model(X_transform)
             l = self.__loss_function(_Y_validation, labels)
@@ -251,9 +233,10 @@ if __name__ == "__main__":
     np.random.seed(1)
     parameter_path = "parameters/test.yaml"
     df = pd.read_csv(f"{Path.home()}/datasets/DataSummary.csv")
-    names = ["ElectricDevices"]
+    names = ["FaceAll"]
     for n in names:
         with open(parameter_path, "r") as file:
             params = yaml.safe_load(file)
         params["dataset_name"] = n
-        Trainer(params, seed=0).run()
+        for s in range(10):
+            Trainer(params, seed=s).run()
