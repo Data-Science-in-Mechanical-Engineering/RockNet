@@ -2,8 +2,8 @@ show_print: True
 
 # model options
 use_rocket: False
-num_neurons: 15
-num_layers: 4
+num_neurons: 17
+num_layers: 10
 
 # dataset global options
 dataset_name: FaceAll #MelbournePedestrian # ChlorineConcentration # NonInvasiveFetalECGThorax2

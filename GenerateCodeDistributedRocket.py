@@ -348,9 +348,9 @@ def load_ucr_dataset(name, test=False):
 	return np.array(X, dtype=np.float32), np.array(y, dtype=np.int64)
 
 
-def generate_data_ucr(num_trajectories, name_dataset, test):
+def generate_data_ucr(num_trajectories, name_dataset, test, frac=1):
 	X_train, y_train = load_ucr_dataset(name_dataset, test)
-	num_trajectories = min(num_trajectories, len(X_train))
+	num_trajectories = min(num_trajectories, int(round(len(X_train) * frac)))
 
 	return (np.array(X_train[0:num_trajectories], dtype=np.float32),
 			np.array(y_train[0:num_trajectories], dtype=np.int64))
@@ -369,7 +369,7 @@ def calculate_RAM(dilations, num_biases_per_kernel, kernels, num_classes, multip
 
 if __name__ == "__main__":
 	# len_timeseries = 101
-	num_nodes = 5
+	num_nodes = 20
 	quantize = True
 
 	# data, labels = generate_data(len_timeseries, quantize)
@@ -388,11 +388,11 @@ if __name__ == "__main__":
 													   test=False)
 	data_test, labels_test = generate_data_ucr(num_trajectories=200, name_dataset="CricketX", test=True)"""
 
-	data_training, labels_training = generate_data_ucr(num_trajectories=10, name_dataset="ElectricDevices", test=False)
-	data_test, labels_test = generate_data_ucr(num_trajectories=10, name_dataset="ElectricDevices", test=True)
+	data_training, labels_training = generate_data_ucr(num_trajectories=10, name_dataset="FaceAll", test=False)
+	data_test, labels_test = generate_data_ucr(num_trajectories=10, name_dataset="FaceAll", test=True)
 
 	"""data_training, labels_training = generate_data_ucr(num_trajectories=8500, name_dataset="FaceAll",
-													   test=False)
+													   test=False, frac=0.8)
 	data_test, labels_test = generate_data_ucr(num_trajectories=200, name_dataset="FaceAll", test=True)"""
 
 	len_timeseries = len(data_training[0])
@@ -426,8 +426,12 @@ if __name__ == "__main__":
 	offsets = {1: 0, 3: 0, 5: 209.1, 7: 151.4, 9: 233.8, 11: 189.5, 13: 167.5,
 			   15: 145.5, 17: 123.5, 19: 123.7}  # CricketX
 
+	offsets = {1: 0, 3: 0, 5: 209.1, 7: 151.4, 9: 248.3, 11: 200.1, 13: 176.1,
+			   15: 152.1, 17: 128.0, 19: 128.3}  # FaceAll
+
 	calculate_RAM(dilations, num_biases_per_kernel, kernels, num_classes, multiplier=4, offset=offsets)
 	print(num_classes)
+	print(".......")
 	#exit(0)
 
 	generate_code([data_training, labels_training], [data_test, labels_test], kernels, dilations, num_biases_per_kernel,
