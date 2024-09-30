@@ -1,9 +1,11 @@
 show_print: True
 
+saving_path: ../../jax_results
+
 # model options
-use_rocket: False
-num_neurons: 15
-num_layers: 4
+use_rocket: True
+num_neurons: 17
+num_layers: 10
 
 # dataset global options
 dataset_name: FaceAll #MelbournePedestrian # ChlorineConcentration # NonInvasiveFetalECGThorax2
@@ -18,4 +20,6 @@ max_epochs: 1000
 patience_lr: 200000
 patience: 100000
 use_cocob: False #True
+quantize_adam: True
+use_dynamictree_quantization: True
 

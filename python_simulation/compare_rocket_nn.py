@@ -55,6 +55,7 @@ def plot_comparison_entire_dataset():
     boundary_ort = np.array([-1.0, 1.0])
     boundary_ort /= np.linalg.norm(boundary_ort)
 
+
     for n in names:
         for i in range(10):
             name_dataset_seed = f"{n}_{i}"
@@ -71,6 +72,8 @@ def plot_comparison_entire_dataset():
     plt.scatter(results[:, 0], results[:, 1])
     plt.plot([0, 1], [0, 1], 'k')
 
+    print(f"acc_improvement {np.mean(results[:, 0] - results[:, 1])}")
+
     print(np.sum(results[:, 0] > results[:, 1]) / len(results[:, 1]))
 
     data = {"accRocket": results[:, 0]*100, "accNN": results[:, 1]*100, "distanceBoundary": distance_to_boundary}
@@ -79,9 +82,20 @@ def plot_comparison_entire_dataset():
 
     plt.show()
 
+    acc_dev = (results[:, 0] - results[:, 1]) * 100
+    hist, bin_edges = np.histogram(acc_dev, bins=[-100.5 + i for i in range(201)], density=True)
+
+    data = {"x": bin_edges[1:] - 0.5, "y": hist}
+    df = pd.DataFrame(data)
+    df.to_csv("results/plots/ComparisonNNROCKETHist.csv")
+
+    plt.bar(bin_edges[1:] - 0.5, hist)
+    plt.show()
+
+
 if __name__ == "__main__":
-    #plot_comparison_entire_dataset()
-    #exit(0)
+    plot_comparison_entire_dataset()
+    exit(0)
 
     data = pd.read_csv(f"{Path.home()}/datasets/DataSummary.csv")
 
