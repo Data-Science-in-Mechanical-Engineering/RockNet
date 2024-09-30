@@ -1,6 +1,5 @@
 import argparse
 import yaml
-import trainer
 
 def parse_arguments():
     parser = argparse.ArgumentParser(description="Training NN on HPC cluster")
@@ -8,6 +7,8 @@ def parse_arguments():
     parser.add_argument("-c", "--comb_id", help="ID of the hyperparameter combination", type=int)
     # iter_id = SLURM_ARRAY_TASK_ID
     parser.add_argument("-i", "--iter_id", help="ID of the current iteration", type=int)
+
+    parser.add_argument("-j", "--use_jax", help="use jax", type=bool)
 
     parser.add_argument("-r", "--pruning_step", help="current pruning step", type=int)
 
@@ -28,6 +29,11 @@ if __name__ == '__main__':
 
     with open(f"/work/mf724021/hpc_parameters/ROCKET/params{args.iter_id}.yaml", "r") as file:
         params = yaml.safe_load(file)
+
+    if args.use_jax:
+        import jax_training as trainer
+    else:
+        import trainer
 
     for i in range(10):
         trainer.parallel_simulation_wrapper(params, seed=i)

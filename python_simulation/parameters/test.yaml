@@ -1,7 +1,9 @@
 show_print: True
 
+saving_path: ../../jax_results
+
 # model options
-use_rocket: False
+use_rocket: True
 num_neurons: 17
 num_layers: 10
 
@@ -18,4 +20,6 @@ max_epochs: 1000
 patience_lr: 200000
 patience: 100000
 use_cocob: False #True
+quantize_adam: True
+use_dynamictree_quantization: True
 

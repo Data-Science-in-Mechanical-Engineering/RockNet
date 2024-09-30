@@ -9,9 +9,10 @@ from trainer import get_logger_name
 import pandas as pd
 
 
-def plot_data(file, color, label):
+def plot_data(file, color, label, use_jax=True):
     try:
-        with open(f"results/{file}", 'rb') as handle:
+        file_path = f"results/{file}" if not use_jax else f"../../jax_results/{file}"
+        with open(file_path, 'rb') as handle:
             acc = p.load(handle)
 
         if label:
@@ -25,13 +26,10 @@ def plot_data(file, color, label):
 if __name__ == "__main__":
     data = pd.read_csv(f"{Path.home()}/datasets/DataSummary.csv")
     names = data["Name"]
-<<<<<<< HEAD
-    names = ["ElectricDevices", "ECG5000", "ChlorineConcentration", "Crop", "ECGFiveDays"]
-=======
-    names = ["NonInvasiveFetalECGThorax2", "Crop", "ChlorineConcentration"]
->>>>>>> feature/neural_network
+    use_jax = True
+    names = ["ElectricDevices"]# ["ElectricDevices", "ECG5000", "ChlorineConcentration", "Crop", "ECGFiveDays"]
 
-    max_num_seeds = 100
+    max_num_seeds = 1
     seed_offset = 0
     colors=['b', 'r', 'g', 'm', 'y', 'k']
 
@@ -42,10 +40,13 @@ if __name__ == "__main__":
         color_idx = 0
         for l in learning_rates:
             for seed in range(max_num_seeds):
-                name_dataset_seed = f"{name_dataset}_{seed}"
-                label = get_logger_name(name_dataset_seed, use_cocob=False, learning_rate=l)
-                plot_data(get_logger_name(name_dataset_seed, use_cocob=False, learning_rate=l), colors[color_idx], label=seed==0)
-            color_idx += 1
+                for quantize_adam in [True, False]:
+                    name_dataset_seed = f"{name_dataset}_{seed}_test_{quantize_adam}"
+                    label = get_logger_name(name_dataset_seed, use_rocket=use_jax, use_cocob=False, learning_rate=l)
+                    plot_data(get_logger_name(name_dataset_seed, use_rocket=use_jax, use_cocob=False, learning_rate=l), 'b' if quantize_adam else "r", label=seed==0, use_jax=use_jax)
+                name_dataset_seed = f"{name_dataset}_{seed}_test"
+                label = get_logger_name(name_dataset_seed, use_rocket=True, use_cocob=False, learning_rate=l)
+                plot_data(get_logger_name(name_dataset_seed, use_rocket=True, use_cocob=False, learning_rate=l), "g", label=seed==0, use_jax=False)
 
         """for seed in range(seed_offset, seed_offset + max_num_seeds):
             name_dataset_seed = f"{name_dataset}_{seed}"

@@ -8,7 +8,6 @@
 #SBATCH --partition=c23m
 #SBATCH --mail-type=FAIL
 #SBATCH --mail-user=alexander.graefe@dsme.rwth-aachen.de
-#SBATCH --mem-per-cpu=3GB # memory per node
 #SBATCH --time=2-00:00:00
 #SBATCH --array=0-255
 
