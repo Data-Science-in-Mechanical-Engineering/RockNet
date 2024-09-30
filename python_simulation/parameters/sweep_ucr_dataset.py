@@ -30,14 +30,14 @@ if __name__ == "__main__":
             params_copy["use_rocket"] = True
             params_copy["quantize_adam"] = quantize_adam
             params_copy["use_dynamictree_quantization"] = True
-            with open(f"{Path.home()}/hpc_parameters/ROCKET/params{i}.yaml", 'w') as file:
+            with open(f"/work/mf724021/hpc_parameters/ROCKET/params{i}.yaml", 'w') as file:
                 yaml.dump(params_copy, file)
                 i += 1
             
         params_copy["use_rocket"] = True
         params_copy["quantize_adam"] = True
         params_copy["use_dynamictree_quantization"] = False
-        with open(f"{Path.home()}/hpc_parameters/ROCKET/params{i}.yaml", 'w') as file:
+        with open(f"/work/mf724021/hpc_parameters/ROCKET/params{i}.yaml", 'w') as file:
             yaml.dump(params_copy, file)
             i += 1
 
