@@ -14,5 +14,5 @@
 module load Python/3.10.4
 
 source venv/bin/activate
-python train_hpc.py -i $SLURM_ARRAY_TASK_ID
+python train_hpc.py -i $SLURM_ARRAY_TASK_ID -j True
 deactivate

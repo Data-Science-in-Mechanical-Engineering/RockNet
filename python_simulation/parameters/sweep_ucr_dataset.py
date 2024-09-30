@@ -55,4 +55,5 @@ if __name__ == "__main__":
             with open(f"{Path.home()}/hpc_parameters/ROCKET/params{i}.yaml", 'w') as file:
                 yaml.dump(params_copy, file)
                 i += 1"""
+    print(f"Generated {i} combinations")
 
