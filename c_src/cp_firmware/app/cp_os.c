@@ -185,7 +185,7 @@ void run_rounds(uint8_t (*communication_finished_callback)(ap_message_t*, uint16
 
     print_time = gpi_tick_hybrid();
     // printing
-    mixer_print_statistics();
+    //mixer_print_statistics();
     uint8_t rank = 0;
     for (unsigned i = 0; i < MX_GENERATION_SIZE; i++)
     {

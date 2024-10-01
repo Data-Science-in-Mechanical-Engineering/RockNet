@@ -344,8 +344,11 @@ if __name__ == "__main__":
 
 	#ädata, labels = generate_data(len_timeseries, quantize)
 	np.random.seed(1)
-	data_train, labels_train = generate_data_ucr(num_trajectories=2200, name_dataset="ElectricDevices", test=False)
-	data_test, labels_test = generate_data_ucr(num_trajectories=200, name_dataset="ElectricDevices", test=True)
+	"""data_train, labels_train = generate_data_ucr(num_trajectories=2200, name_dataset="ElectricDevices", test=False)
+	data_test, labels_test = generate_data_ucr(num_trajectories=200, name_dataset="ElectricDevices", test=True)"""
+
+	data_train, labels_train = generate_data_ucr(num_trajectories=8500, name_dataset="OSULeaf", test=False)
+	data_test, labels_test = generate_data_ucr(num_trajectories=242, name_dataset="OSULeaf", test=True)
 
 	len_timeseries = len(data_train[0])
 

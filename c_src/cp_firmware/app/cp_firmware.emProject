@@ -101,6 +101,8 @@
       <file file_name="rocket_os.c" />
       <file file_name="rocket_os.h" />
       <file file_name="rocket_mixer_config.c" />
+      <file file_name="dynamic_tree_quantization.c" />
+      <file file_name="dynamic_tree_quantization.h" />
     </folder>
     <folder Name="System Files">
       <file file_name="thumb_crt0.s" />

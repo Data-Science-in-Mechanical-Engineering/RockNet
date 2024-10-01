@@ -83,6 +83,8 @@ GPI_TRACE_CONFIG(main, GPI_TRACE_BASE_SELECTION);
 
 #include "rocket_os.h"
 
+#include "dynamic_tree_quantization.h"
+
 #include GPI_PLATFORM_PATH(radio.h)
 
 #include <nrf.h>
@@ -587,8 +589,6 @@ int main()
     init_spi(); // Initialise SPI communication to AP */
     initialization(); // this contains gpi_platform_init, gpi_int_enable and init_spi
     
-    printf("Hello There\r\n");
-
     init_rocket();
     //while(1){}
 

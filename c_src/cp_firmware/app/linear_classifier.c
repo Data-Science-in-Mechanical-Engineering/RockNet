@@ -2,11 +2,14 @@
 #include "rocket_config.h"
 #include "rocket_mixer_config.h"
 #include "conv.h"
+#include "dynamic_tree_quantization.h"
 
 #include <math.h>
 #include <stdio.h>
 
 // #define PARAMETERLESS
+
+#define USE_QADAM 1
 
 static float weight[NUM_CLASSES * MAX_FEATURES_PER_DEVICE] = {1.0, 2.0, 3.0, 1.0, -1.0, -2.0};
 static float bias[NUM_CLASSES] = {0};
@@ -22,12 +25,29 @@ static const float random_numbers[] = {-0.16050057663875206, 0.5970915755927826,
 
 #define WEIGHT_DECAY (0)
 
-#ifndef PARAMETERLESS
+#if USE_QADAM
+typedef uint8_t adam_dtype_t;
+#else
+typedef float adam_dtype_t;
+#endif
 
-static float m_t_bias[NUM_CLASSES] = {0};
-static float v_t_bias[NUM_CLASSES] = {0};
-static float m_t_weight[NUM_CLASSES * MAX_FEATURES_PER_DEVICE] = {0};
-static float v_t_weight[NUM_CLASSES * MAX_FEATURES_PER_DEVICE] = {0};
+static adam_dtype_t m_t_bias[NUM_CLASSES] = {0};
+static adam_dtype_t v_t_bias[NUM_CLASSES] = {0};
+static adam_dtype_t m_t_weight[NUM_CLASSES * MAX_FEATURES_PER_DEVICE] = {0};
+static adam_dtype_t v_t_weight[NUM_CLASSES * MAX_FEATURES_PER_DEVICE] = {0};
+
+#if USE_QADAM
+#define QADAM_BUFFER_SIZE (256)
+#define NUM_BIAS_SCALINGS (NUM_CLASSES / QADAM_BUFFER_SIZE + 1)
+#define NUM_WEIGHT_SCALINGS (NUM_CLASSES * MAX_FEATURES_PER_DEVICE / QADAM_BUFFER_SIZE + 1)
+static float m_t_bias_scalings[NUM_BIAS_SCALINGS] = {0};
+static float v_t_bias_scalings[NUM_BIAS_SCALINGS] = {0};
+static float m_t_weight_scalings[NUM_WEIGHT_SCALINGS] = {0};
+static float v_t_weight_scalings[NUM_WEIGHT_SCALINGS] = {0};
+
+static float block_wise_quantization_m_buffer[QADAM_BUFFER_SIZE];
+static float block_wise_quantization_v_buffer[QADAM_BUFFER_SIZE];
+#endif
 
 
 #define BETA_1 (0.9f)
@@ -36,18 +56,6 @@ static float v_t_weight[NUM_CLASSES * MAX_FEATURES_PER_DEVICE] = {0};
 
 #define LEARNING_RATE (1e-3)
 
-
-#else
-static float l_i[NUM_CLASSES * MAX_FEATURES_PER_DEVICE] = {0};
-static float g_i[NUM_CLASSES * MAX_FEATURES_PER_DEVICE] = {0};
-static float reward[NUM_CLASSES * MAX_FEATURES_PER_DEVICE] = {0};
-static float sum_of_gradients[NUM_CLASSES * MAX_FEATURES_PER_DEVICE] = {0}; 
-
-static float l_i_bias[NUM_CLASSES] = {0};
-static float g_i_bias[NUM_CLASSES] = {0};
-static float reward_bias[NUM_CLASSES] = {0};
-static float sum_of_gradients_bias[NUM_CLASSES] = {0}; 
-#endif
 
 static float out_softmax[NUM_CLASSES];
 
@@ -158,65 +166,125 @@ static inline float float_max(float f1, float f2)
     return f1 > f2 ? f1 : f2;
 }
 
+#if USE_QADAM
+static float calculate_qadam_scalings(float *array, uint16_t length)
+{
+  float scaling = 1e-7;
+  for (uint16_t i = 0; i < length; i++) {
+    if (scaling < array[i]) {
+      scaling = array[i];
+    } else {
+      if (scaling < -array[i]) {
+        scaling = -array[i];
+      }
+    }
+  }
+  return 1.0 / scaling;
+}
+
+static float rescale_array(float *array, uint32_t length, float scaling)
+{
+  for (uint32_t i = 0; i < length; i++) {
+    array[i] *= scaling;
+  }
+}
+
+static void qadam_step(float *params, float *d, uint8_t *m, uint8_t *v, float *m_scalings, float *v_scalings, uint32_t num_params, uint32_t num_scalings)
+{
+  float lr_t = LEARNING_RATE * sqrtf(1.0f - powf(BETA_2, t)) / (1.0f - powf(BETA_1, t));
+  uint32_t scaling_idx = 0;
+  uint32_t buffer_idx = 0;
+  uint32_t param_idx = 0;
+
+  rescale_array(d, num_params, 1.0 / num_d);
+
+  for (uint16_t scaling_idx = 0; scaling_idx < num_scalings; scaling_idx++) {
+    int remaining_params = num_params - param_idx; 
+    remaining_params = remaining_params < QADAM_BUFFER_SIZE ? remaining_params : QADAM_BUFFER_SIZE;
+
+    dynamic_tree_dequantization(m + param_idx, block_wise_quantization_m_buffer, remaining_params);
+    dynamic_tree_dequantization(v + param_idx, block_wise_quantization_v_buffer, remaining_params);
+
+    /*for (uint32_t i = 0; i < 1; i++) {
+      printf(": %d\n", (int) (1000 * block_wise_quantization_m_buffer[i]));
+    }*/
+    float s = 1 / (m_scalings[scaling_idx]+1e-7);
+    rescale_array(block_wise_quantization_m_buffer, remaining_params, s);
+    rescale_array(block_wise_quantization_v_buffer, remaining_params, 1 / (v_scalings[scaling_idx]+1e-7));
+
+    for (uint32_t i = 0; i < remaining_params; i++) {
+      block_wise_quantization_m_buffer[i] = BETA_1 * block_wise_quantization_m_buffer[i] + (1-BETA_1) * d[param_idx + i];
+      block_wise_quantization_v_buffer[i] = BETA_2 * block_wise_quantization_v_buffer[i] + (1-BETA_2) * d[param_idx + i] * d[param_idx + i];
+      params[param_idx + i] -= lr_t * block_wise_quantization_m_buffer[i] / (sqrtf(block_wise_quantization_v_buffer[i]) + EPSILON);
+      d[param_idx + i] = 0;
+    }
+
+    m_scalings[scaling_idx] = calculate_qadam_scalings(block_wise_quantization_m_buffer, remaining_params);
+    v_scalings[scaling_idx] = calculate_qadam_scalings(block_wise_quantization_v_buffer, remaining_params);
+
+   /* for (uint32_t i = 0; i < 1; i++) {
+      printf("+++%d\n", (int) (1000 * block_wise_quantization_m_buffer[i]));
+    }*/
+
+    rescale_array(block_wise_quantization_m_buffer, remaining_params, m_scalings[scaling_idx]);
+    rescale_array(block_wise_quantization_v_buffer, remaining_params, v_scalings[scaling_idx]);
+
+    /*for (uint32_t i = 0; i < 1; i++) {
+      printf("%d\n", (int) (1000 * block_wise_quantization_m_buffer[i]));
+    }*/
+
+    dynamic_tree_quantization(block_wise_quantization_m_buffer, m + param_idx, remaining_params);
+    dynamic_tree_quantization(block_wise_quantization_v_buffer, v + param_idx,  remaining_params);
+
+    // printf("; %u\n", *(m + param_idx));
+    
+    param_idx += remaining_params;
+    //printf("%u\n", param_idx);
+    if (param_idx >= num_params) {
+      break;
+    }
+  }
+
+}
+#endif
+
 
 void update_weights()
 {
-    #ifndef PARAMETERLESS
-    float beta_1_pow = powf(BETA_1, t);
-    float beta_2_pow = powf(BETA_2, t);
-    #endif
+    float lr_t = LEARNING_RATE * sqrtf(1.0f - powf(BETA_2, t)) / (1.0f - powf(BETA_1, t));
+    #if USE_QADAM
+    qadam_step(weight, d_weight, m_t_weight, v_t_weight, m_t_weight_scalings, v_t_weight_scalings, NUM_CLASSES * devices_num_features[rocket_node_idx], NUM_WEIGHT_SCALINGS);
+    qadam_step(bias, d_bias, m_t_bias, v_t_bias, m_t_bias_scalings, v_t_bias_scalings, NUM_CLASSES, NUM_BIAS_SCALINGS);
+    
+    #else
     for (uint32_t row_weight = 0; row_weight < NUM_CLASSES; row_weight++) {
       for (uint32_t col_weight = 0; col_weight < devices_num_features[rocket_node_idx]; col_weight++) {
           uint32_t i = row_weight*devices_num_features[rocket_node_idx] + col_weight;
           d_weight[i] /= num_d;
           d_weight[i] += WEIGHT_DECAY * weight[i];
-          #ifndef PARAMETERLESS
 
           m_t_weight[i] = BETA_1 * m_t_weight[i] + (1 - BETA_1) * d_weight[i];
           v_t_weight[i] = BETA_2 * v_t_weight[i] + (1 - BETA_2) * d_weight[i] * d_weight[i];
-          float mt_hat = m_t_weight[i] / (1 - beta_1_pow);
-          float vt_hat = v_t_weight[i] / (1 - beta_2_pow);
-          weight[i] -= LEARNING_RATE * mt_hat / (sqrtf(vt_hat) + EPSILON);  //d_weight[i]; // 
-          
-          #else
-
-          d_weight[i] = -d_weight[i];
-          l_i[i] = float_max(l_i[i], float_abs(d_weight[i]));
-          g_i[i] = g_i[i] + float_abs(d_weight[i]);
-          reward[i] = float_max(reward[i] + weight[i]*d_weight[i], 0);
-          sum_of_gradients[i] += d_weight[i];
-          weight[i] = sum_of_gradients[i] / (l_i[i]*float_max(g_i[i]+l_i[i], 100*l_i[i]) + 1e-7) * (l_i[i] + reward[i]);  
-          
-          #endif
+          weight[i] -= lr_t * m_t_weight[i] / (sqrtf(v_t_weight[i]) + EPSILON);  //d_weight[i]; // 
 
           d_weight[i] = 0;
       }
       d_bias[row_weight] /= num_d;
       d_bias[row_weight] += WEIGHT_DECAY * d_bias[row_weight];
 
-      #ifndef PARAMETERLESS
       m_t_bias[row_weight] = BETA_1 * m_t_bias[row_weight] + (1 - BETA_1) * d_bias[row_weight];
       v_t_bias[row_weight] = BETA_2 * v_t_bias[row_weight] + (1 - BETA_2) * d_bias[row_weight] * d_bias[row_weight];
+      bias[row_weight] -= lr_t * m_t_bias[row_weight] / (sqrtf(v_t_bias[row_weight]) + EPSILON);
 
-      float mt_hat = m_t_bias[row_weight] / (1 - beta_1_pow);
-      float vt_hat = v_t_bias[row_weight] / (1 - beta_2_pow);
-      bias[row_weight] -= LEARNING_RATE * mt_hat / (sqrtf(vt_hat) + EPSILON);
-
-      #else
-      d_bias[row_weight] = -d_bias[row_weight];
-      l_i_bias[row_weight] = float_max(l_i_bias[row_weight], float_abs(d_bias[row_weight]));
-      g_i_bias[row_weight] = g_i_bias[row_weight] + float_abs(d_bias[row_weight]);
-      reward_bias[row_weight] = float_max(reward_bias[row_weight] + bias[row_weight]*d_bias[row_weight], 0);
-      sum_of_gradients_bias[row_weight] += d_bias[row_weight];
-      bias[row_weight] = sum_of_gradients_bias[row_weight] / (l_i_bias[row_weight]*float_max(g_i_bias[row_weight]+l_i_bias[row_weight], 100*l_i_bias[row_weight]) + 1e-7) * (l_i_bias[row_weight] + reward_bias[row_weight]);
-      #endif
       d_bias[row_weight] = 0;
       if (rocket_node_idx != 0) {
         bias[row_weight] = 0;
       }
     }
+    #endif
     t++;
     num_d = 0;
+
 }
 
 void init_linear_classifier(uint8_t id)
@@ -228,4 +296,27 @@ void init_linear_classifier(uint8_t id)
   for (uint32_t i = 0; i < NUM_CLASSES*devices_num_features[rocket_node_idx]; i++) {
     weight[i] = 2 * random_numbers[i%1000] / sqrtf(NUM_FEATURES + NUM_CLASSES);
   }
+
+  #if USE_QADAM
+  init_dynamic_tree_quantization();
+  for (uint32_t i = 0; i < NUM_BIAS_SCALINGS; i++) {
+    m_t_bias_scalings[i] = 1.0f;
+    v_t_bias_scalings[i] = 1.0f;
+  }
+  for (uint32_t i = 0; i < NUM_WEIGHT_SCALINGS; i++) {
+    m_t_weight_scalings[i] = 1.0f;
+    v_t_weight_scalings[i] = 1.0f;
+  }
+  
+  for (uint32_t i = 0; i < NUM_CLASSES * MAX_FEATURES_PER_DEVICE; i++) {
+    m_t_weight[i] = 120;
+    v_t_weight[i] = 120;
+  }
+  
+  for (uint32_t i = 0; i < NUM_CLASSES; i++) {
+    m_t_bias[i] = 120;
+    v_t_bias[i] = 120;
+  }
+
+  #endif
 }

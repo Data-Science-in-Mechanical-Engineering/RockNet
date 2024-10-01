@@ -369,13 +369,14 @@ def calculate_RAM(dilations, num_biases_per_kernel, kernels, num_classes, multip
 
 if __name__ == "__main__":
 	# len_timeseries = 101
-	num_nodes = 20
+	num_nodes = 5
 	quantize = True
 
 	# data, labels = generate_data(len_timeseries, quantize)
 	np.random.seed(1)
-	"""data_training, labels_training = generate_data_ucr(num_trajectories=8500, name_dataset="OSULeaf", test=False)
-	data_test, labels_test = generate_data_ucr(num_trajectories=242, name_dataset="OSULeaf", test=True)"""
+	data_training, labels_training = generate_data_ucr(num_trajectories=8500, name_dataset="OSULeaf", test=False)
+	data_test, labels_test = generate_data_ucr(num_trajectories=100, name_dataset="OSULeaf", test=True)
+	# data_test, labels_test = generate_data_ucr(num_trajectories=242, name_dataset="OSULeaf", test=True)
 
 	"""data_training, labels_training = generate_data_ucr(num_trajectories=2200, name_dataset="ElectricDevices", test=False)
 	data_test, labels_test = generate_data_ucr(num_trajectories=200, name_dataset="ElectricDevices", test=True)"""
@@ -388,8 +389,8 @@ if __name__ == "__main__":
 													   test=False)
 	data_test, labels_test = generate_data_ucr(num_trajectories=200, name_dataset="CricketX", test=True)"""
 
-	data_training, labels_training = generate_data_ucr(num_trajectories=10, name_dataset="FaceAll", test=False)
-	data_test, labels_test = generate_data_ucr(num_trajectories=10, name_dataset="FaceAll", test=True)
+	"""data_training, labels_training = generate_data_ucr(num_trajectories=10, name_dataset="FaceAll", test=False)
+	data_test, labels_test = generate_data_ucr(num_trajectories=10, name_dataset="FaceAll", test=True)"""
 
 	"""data_training, labels_training = generate_data_ucr(num_trajectories=8500, name_dataset="FaceAll",
 													   test=False, frac=0.8)

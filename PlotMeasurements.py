@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 
 
 voltage = 3
-power_tx_rampup = voltage * 13e-3
+power_tx_rampup = voltage * 13.63e-3
 power_rx_rampup = voltage * 13e-3
 power_rx_air = voltage * 6.4e-3
 power_tx_air = voltage * 13.63e-3  #6.6e-3
@@ -248,22 +248,26 @@ if __name__ == "__main__":
 
 	#analyze_logs("OSULeaf", 20)
 	#exit(0)
+	for name in ["OSULeaf", "ElectricDevices", "FaceAll"]:
+		print(f"{name} ===============================================")
+		print("Latency")
+		max_acc_aifes_time, max_acc_aifes = get_max_acc(name + "NN", 1)
+		max_acc_rocknet_time, max_acc_rocknet = get_max_acc(name, 20)
 
-	print("Latency")
-	max_acc_aifes_time, max_acc_aifes = get_max_acc(name + "NN", 1)
-	max_acc_rocknet_time, max_acc_rocknet = get_max_acc(name, 20)
+		print(f"max AIFES: {max_acc_aifes_time}h: {max_acc_aifes}%")
+		print(f"max ROCKNET: {max_acc_rocknet_time}h ({max_acc_rocknet_time / max_acc_aifes_time}): {max_acc_rocknet}% ({max_acc_rocknet / max_acc_aifes})")
 
-	print(f"max AIFES: {max_acc_aifes_time}h: {max_acc_aifes}%")
-	print(f"max ROCKNET: {max_acc_rocknet_time}h: {max_acc_rocknet}%")
+		latency_rocknet_till_aifes = time_till_acc(name, 20, max_acc_aifes)
+		print(f"Latency ROCKNET till max aifes: {latency_rocknet_till_aifes} h ({latency_rocknet_till_aifes / max_acc_aifes_time}) ")
 
-	print(f"Latency ROCKNET till max aifes: {time_till_acc(name, 20, max_acc_aifes)}")
-
-	print("Energy consumption")
-	print(f"Energy AIFES max: {max_acc_aifes_time * 3600*power_calculation}J")
-	energy = energy_till_accuracy(name, 20, max_acc_rocknet)
-	print(f"Energy ROCKNET max: {energy} J")
-	energy = energy_till_accuracy(name, 20, max_acc_aifes)
-	print(f"Energy ROCKNET till AIfES max: {energy} J")
+		print("Energy consumption")
+		energy_aifes = max_acc_aifes_time * 3600*power_calculation
+		print(f"Energy AIFES max: {energy_aifes}J")
+		energy = energy_till_accuracy(name, 20, max_acc_rocknet)
+		print(f"Energy ROCKNET max: {energy} J ({energy / energy_aifes})")
+		energy = energy_till_accuracy(name, 20, max_acc_aifes)
+		print(f"Energy ROCKNET till AIfES max: {energy} J ({energy / energy_aifes})")
+		print(f"===============================================")
 
 	parse_csv("OSULeaf", 20)
 	parse_csv("OSULeafNN", 1)
