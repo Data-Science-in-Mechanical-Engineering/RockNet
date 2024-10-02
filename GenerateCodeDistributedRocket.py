@@ -100,7 +100,7 @@ def generate_timing_configuration(message_size_list, num_devices, num_classes, a
 	num_messages_best = num_messages[best_ind]
 
 	slot_length = round(slot_time) + 10  # plus 10 to have a bit of security gap
-	calculation_duration = int(280 * num_classes / num_devices) + 20
+	calculation_duration = int(340 * num_classes / num_devices) + 20
 
 	return mixer_size, num_rounds, slot_length, calculation_duration, num_messages_best
 
@@ -369,13 +369,13 @@ def calculate_RAM(dilations, num_biases_per_kernel, kernels, num_classes, multip
 
 if __name__ == "__main__":
 	# len_timeseries = 101
-	num_nodes = 5
+	num_nodes = 20
 	quantize = True
 
 	# data, labels = generate_data(len_timeseries, quantize)
 	np.random.seed(1)
 	data_training, labels_training = generate_data_ucr(num_trajectories=8500, name_dataset="OSULeaf", test=False)
-	data_test, labels_test = generate_data_ucr(num_trajectories=100, name_dataset="OSULeaf", test=True)
+	data_test, labels_test = generate_data_ucr(num_trajectories=242, name_dataset="OSULeaf", test=True)
 	# data_test, labels_test = generate_data_ucr(num_trajectories=242, name_dataset="OSULeaf", test=True)
 
 	"""data_training, labels_training = generate_data_ucr(num_trajectories=2200, name_dataset="ElectricDevices", test=False)

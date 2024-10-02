@@ -1,24 +1,61 @@
 #ifndef INC_DNNI_CONFIG_H
 #define INC_DNNI_CONFIG_H
 
-typedef struct message_assignment_t_tag 
-{ 
-	uint8_t id;   // id of message slot 
-	uint16_t size;  // slot size in byte 
-	uint16_t mixer_assignment_start;  // the index in mixer, the message starts 
+#include <stdint.h>
+
+typedef struct message_assignment_t_tag
+{
+	uint8_t id;   // id of message slot
+	uint16_t size;  // slot size in byte
+	uint16_t mixer_assignment_start;  // the index in mixer, the message starts
 	uint16_t mixer_assignment_end;   // the index in mixer the message ends (not including this index)
-	uint16_t size_end; // the size of the piece of the message in the mixer message at index mixer_assignment_end-1 
+	uint16_t size_end; // the size of the piece of the message in the mixer message at index mixer_assignment_end-1
 } message_assignment_t;
 
-static const uint8_t nodes[] = {1, 2, 2};
-static const uint8_t dnni_nodes[] = {1, 2};
+static const uint8_t nodes[] = {  1,  2,  3,  4,  5,  6,  7,  8,  9,  10,  11,  12,  13,  14,  15,  16,  17,  18,  19,  20,  21, };
+static const uint8_t rocket_nodes[] = {  1,  2,  3,  4,  5,  6,  7,  8,  9,  10,  11,  12,  13,  14,  15,  16,  17,  18,  19,  20, };
 
 static message_assignment_t message_assignment[] = {
-	{.id=1, .size=1710}};
-#define MX_PAYLOAD_SIZE 95
+ {.id=254, .size=431},
+ {.id=1, .size=26},
+ {.id=2, .size=26},
+ {.id=3, .size=26},
+ {.id=4, .size=26},
+ {.id=5, .size=26},
+ {.id=6, .size=26},
+ {.id=7, .size=26},
+ {.id=8, .size=26},
+ {.id=9, .size=26},
+ {.id=10, .size=26},
+ {.id=11, .size=26},
+ {.id=12, .size=26},
+ {.id=13, .size=26},
+ {.id=14, .size=26},
+ {.id=15, .size=26},
+ {.id=16, .size=26},
+ {.id=17, .size=26},
+ {.id=18, .size=26},
+ {.id=19, .size=26},
+ {.id=20, .size=26},
+ };
+
+#define MX_PAYLOAD_SIZE 100
 #define MX_ROUND_LENGTH 150
-#define MX_SLOT_LENGTH GPI_TICK_US_TO_HYBRID2(2356)
-#define ROUND_LENGTH_MS                 523
-#define MX_GENERATION_SIZE 37
+#define MX_SLOT_LENGTH GPI_TICK_US_TO_HYBRID2(689)
+#define ROUND_LENGTH_MS            ((MX_ROUND_LENGTH*MX_SLOT_LENGTH / (GPI_HYBRID_CLOCK_RATE / 1000000)) / 1000 + 140)
+#define MX_GENERATION_SIZE 26
+
+#define AGGREGATE_FLAGS_SIZE (0)
+#define AGGREGATE_CONTENT_SIZE (0)
+
+typedef struct __attribute__((packed)) aggregate_field_t_tag
+{
+	uint8_t flags[AGGREGATE_FLAGS_SIZE];
+	float class_values[AGGREGATE_CONTENT_SIZE];
+} aggregate_field_t;
+
+#define AGGREGATE_SIZE (sizeof(aggregate_field_t))
+
+uint8_t get_rocket_node_idx(uint8_t id);
 
 #endif /* INC_DNNI_CONFIG_H */

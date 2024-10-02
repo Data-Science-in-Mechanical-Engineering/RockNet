@@ -25,6 +25,12 @@ static ap_message_t ts_message;
 
 static uint8_t rocket_node_idx = 0;
 
+static uint32_t training_data_starting_time;
+static uint32_t training_data_ending_time;
+
+static uint32_t evaluation_data_starting_time;
+static uint32_t evaluation_data_ending_time;
+
 
 static training_state_t training_state = IDLE;
 static uint32_t batch_time = 0;
@@ -76,6 +82,8 @@ static uint8_t communication_finished_callback(ap_message_t *data, uint16_t size
   //printf("%lu\r\n", round_nmbr);
   //printf(":%lu\r\n", current_training_ts_idx);
   //printf(":%lu\r\n", current_evaluation_ts_idx);
+
+  printf("rx_time_series_last_round: %u\n", rx_time_series_last_round);
 
   uint8_t updated_gradients = 0;
   
@@ -173,52 +181,88 @@ static uint16_t communication_starts_callback(ap_message_t **data)
     data[0]->classification_message.classification[i] = linear_classification_part[i];
   }
   // write timeseries in tx_message
-  if (rocket_node_idx == 0) {
-    data[1] = &ts_message;
-    const time_series_type_t *ts;
-    uint8_t label = 0; 
-    // determine, if to send training or evaluation data
-    switch (training_state) {
-      case TRAINING:
-        {
-          // 2 round before siwtching to the evaluation, we already need to send evaluation timeseries, as we have a delay.
-          // (the gradients, we calculate for the next times are the gradients for the timeseries, we currently received)
-          if (current_training_ts_idx <  NUM_TRAINING_TIMESERIES) {
-            ts = get_training_timeseries()[current_training_ts_idx];
-            label = get_training_labels()[current_training_ts_idx];
-          } else {
-            ts = get_evaluation_timeseries()[current_evaluation_ts_idx];
-            label = get_evaluation_labels()[current_evaluation_ts_idx];
+  data[1] = &ts_message;
+  const time_series_type_t *ts;
+  uint8_t label = 0; 
+  // determine, if to send training or evaluation data
+  switch (training_state) {
+    case TRAINING:
+      {
+        // 2 round before siwtching to the evaluation, we already need to send evaluation timeseries, as we have a delay.
+        // (the gradients, we calculate for the next times are the gradients for the timeseries, we currently received)
+        if (current_training_ts_idx <  NUM_TRAINING_TIMESERIES) {
+          // only send assigned part.
+          if (current_training_ts_idx < training_data_starting_time || current_training_ts_idx >= training_data_ending_time) {
+            return 1;
+          }
+          ts = get_training_timeseries()[current_training_ts_idx];
+          label = get_training_labels()[current_training_ts_idx];
+        } else {
+          if (current_evaluation_ts_idx < evaluation_data_starting_time || current_evaluation_ts_idx >= evaluation_data_ending_time) {
+            return 1;
           }
 
-          data[1]->time_series_message.training = 1;
-
+          ts = get_evaluation_timeseries()[current_evaluation_ts_idx];
+          label = get_evaluation_labels()[current_evaluation_ts_idx];
         }
-        break;
-      case EVALUATION:
-        {
-          // 1 round before siwtching to the training, we already need to send training timeseries, as we have a delay.
-          if (current_evaluation_ts_idx <  NUM_EVALUATION_TIMESERIES) {
-            ts = get_evaluation_timeseries()[current_evaluation_ts_idx];
-            label = get_evaluation_labels()[current_evaluation_ts_idx];
-          } else {
-            printf("%u\n", current_training_ts_idx);
-            ts = get_training_timeseries()[current_training_ts_idx];
-            label = get_training_labels()[current_training_ts_idx];
+
+        data[1]->time_series_message.training = 1;
+
+      }
+      break;
+    case EVALUATION:
+      {
+        // 1 round before siwtching to the training, we already need to send training timeseries, as we have a delay.
+        if (current_evaluation_ts_idx <  NUM_EVALUATION_TIMESERIES) {
+          if (current_evaluation_ts_idx < evaluation_data_starting_time || current_evaluation_ts_idx >= evaluation_data_ending_time) {
+            return 1;
           }
+          ts = get_evaluation_timeseries()[current_evaluation_ts_idx];
+          label = get_evaluation_labels()[current_evaluation_ts_idx];
+        } else {
+          // only send assigned part.
+          if (current_training_ts_idx < training_data_starting_time || current_training_ts_idx >= training_data_ending_time) {
+            return 1;
+          }
+          // printf("%u\n", current_training_ts_idx);
+          ts = get_training_timeseries()[current_training_ts_idx];
+          label = get_training_labels()[current_training_ts_idx];
         }
-        break;
-      case IDLE:
-        return 1;
-    }
-    for (uint16_t j = 0; j < LENGTH_TIME_SERIES; j++) {
-      data[1]->time_series_message.data[j] = ts[j];
-    }
-    data[1]->time_series_message.label = label;
-
-    return 2;
+      }
+      break;
+    case IDLE:
+      return 1;
   }
-  return 1;
+  for (uint16_t j = 0; j < LENGTH_TIME_SERIES; j++) {
+    data[1]->time_series_message.data[j] = ts[j];
+  }
+  data[1]->time_series_message.label = label;
+  printf("sending timeseries\n");
+  return 2;
+}
+
+static void calculate_dataset_assignment(uint32_t *starting, uint32_t *ending, uint32_t num_timeseries)
+{
+  uint32_t num_nodes = NUM_ELEMENTS(rocket_nodes);
+  uint32_t num_datapoints[num_nodes];
+  uint32_t num_timeseries_base = num_timeseries / num_nodes;
+  uint32_t num_nodes_one_more = num_timeseries % num_nodes;
+
+  for (uint32_t i = 0; i < num_nodes; i++) {
+    num_datapoints[i] = num_timeseries_base;
+    if (i < num_nodes_one_more) {
+      num_datapoints[i] += 1;
+    }
+  }
+
+  *starting = 0;
+  uint32_t i = 0;
+  for (i = 0; i < rocket_node_idx; i++) {
+    *starting += num_datapoints[i];
+  }
+
+  *ending = *starting + num_datapoints[i];
+
 }
 
 void run_rocket_os(uint8_t id)
@@ -226,6 +270,14 @@ void run_rocket_os(uint8_t id)
   printf("Init device %u started\n", id);
 
   rocket_node_idx = get_rocket_node_idx(id);
+  
+  // calculate starting and ending values in dataset
+  calculate_dataset_assignment(&training_data_starting_time, &training_data_ending_time, NUM_TRAINING_TIMESERIES);
+  calculate_dataset_assignment(&evaluation_data_starting_time, &evaluation_data_ending_time, NUM_EVALUATION_TIMESERIES);
+
+  printf("%u\n", evaluation_data_starting_time);
+  printf("%u\n", evaluation_data_ending_time);
+  printf("sdfasdfasdfasdfasdfasdf\n");
 
   training_state = IDLE;
 
