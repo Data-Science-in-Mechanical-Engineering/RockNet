@@ -70,18 +70,18 @@ static uint8_t communication_finished_callback(ap_message_t *data, uint16_t size
     uint32_t current_time = round_nmbr % (NUM_TRAINING_TIMESERIES + NUM_EVALUATION_TIMESERIES);
 
     if (current_time < NUM_EVALUATION_TIMESERIES) {
-      current_evaluation_ts_idx = current_time+2;
+      current_evaluation_ts_idx = current_time + 1;
       current_training_ts_idx = 0;
       training_state = EVALUATION;
     } else {
-      current_training_ts_idx = current_time - NUM_EVALUATION_TIMESERIES+2;
+      current_training_ts_idx = current_time - NUM_EVALUATION_TIMESERIES + 1;
       current_evaluation_ts_idx = 0;
       training_state = TRAINING;
     }
   }
-  //printf("%lu\r\n", round_nmbr);
-  //printf(":%lu\r\n", current_training_ts_idx);
-  //printf(":%lu\r\n", current_evaluation_ts_idx);
+  printf("time: %lu, ", round_nmbr);
+  printf(":%lu, ", current_training_ts_idx);
+  printf(":%lu\r\n", current_evaluation_ts_idx);
 
   printf("rx_time_series_last_round: %u\n", rx_time_series_last_round);
 
@@ -137,7 +137,6 @@ static uint8_t communication_finished_callback(ap_message_t *data, uint16_t size
           current_training_ts_idx = 1;
  
           current_evaluation_ts_idx = 0;
-          current_training_ts_idx = 0;
           training_state = TRAINING;
 
           printf("Accuracy: %u\r\n", (uint16_t) (1000 * evaluation_accuracy/num_summands_evaluation_accuracy));

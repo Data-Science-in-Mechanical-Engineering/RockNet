@@ -216,7 +216,7 @@ def print_table(data, num_nodes_start, num_nodes_end, error_plus=None, error_min
 
 
 if __name__ == "__main__":
-	name = "FaceAll"  #"OSULeaf"#"ElectricDevices"
+	name = "OSULeaf"# "FaceAll"  #"OSULeaf"#"ElectricDevices"
 	comps = []
 	comps_errors_plus = []
 	comps_errors_minus = []
@@ -225,7 +225,7 @@ if __name__ == "__main__":
 	coms_errors_minus = []
 	calc_times = []
 	com_times = []
-	num_nodes_start = 9
+	num_nodes_start = 5
 	for i in range(num_nodes_start, 20, 2):
 		comp, comp_em, comp_ep, com, com_em, com_ep, calc_time, com_time = analyze_logs(name, i)
 		comps.append(comp)

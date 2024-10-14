@@ -185,7 +185,7 @@ void run_rounds(uint8_t (*communication_finished_callback)(ap_message_t*, uint16
 
     print_time = gpi_tick_hybrid();
     // printing
-    //mixer_print_statistics();
+    mixer_print_statistics();
     uint8_t rank = 0;
     for (unsigned i = 0; i < MX_GENERATION_SIZE; i++)
     {
@@ -201,12 +201,12 @@ void run_rounds(uint8_t (*communication_finished_callback)(ap_message_t*, uint16
     printf(" print_time=%" PRIu32 "us\n", gpi_tick_hybrid_to_us(print_time));
 
 
-    #if DEVICE_ID == 1
-    // printf("%u/%u\n", messages_received_idx, NUM_ELEMENTS(message_assignment));
+    //#if DEVICE_ID == 1
+    printf("m: %u/%u\n", messages_received_idx, NUM_ELEMENTS(message_assignment));
     for (uint8_t i = 0; i < messages_received_idx; i++) {
       //printf("%u\n", mixer_messages_received[i].header.id);
     }
-    #endif
+   // #endif
 
     // write round in metadata message, which will be sent to AP, such that AP knows what time it is.
     mixer_messages_received[messages_received_idx].metadata_message.header.type = TYPE_METADATA;
