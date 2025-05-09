@@ -34,8 +34,12 @@ def load_data(dataset_name, seed, use_rocket, eval_dataset, quantize_adam, use_d
                             use_dynamic_tree_quantization=use_dynamic_tree_quantization,
                             learning_rate=learning_rate)
     print(f"Loading file {file}")
+    if use_rocket and quantize_adam:
+        file = f"../../jax_results/{file}"
+    else:
+        file = f"results/{file}" 
     try:
-        with open(f"../../jax_results/{file}", 'rb') as handle:
+        with open(file, 'rb') as handle:
             acc = p.load(handle)
         return acc
     except:
@@ -79,9 +83,9 @@ def plot_comparison_entire_dataset():
 
     for n in names:
         for i in range(10):
-            name_dataset_seed = f"{n}_{i}"
-            succ_rocket, acc_rocket = get_final_accuracy(name_dataset_seed, True, 0.001)
-            succ_nn, acc_nn = get_final_accuracy(name_dataset_seed, False, 0.001)
+            name_dataset_seed = f"{n}"
+            succ_rocket, acc_rocket = get_final_accuracy(name_dataset_seed, i, True, quantize_adam=True, use_dynamic_tree_quantization=True, learning_rate=0.001)
+            succ_nn, acc_nn = get_final_accuracy(name_dataset_seed, i, False, quantize_adam=False, use_dynamic_tree_quantization=False, learning_rate=0.001)
             if succ_nn and succ_rocket:
                 results.append([acc_rocket, acc_nn])
 
@@ -115,6 +119,7 @@ def plot_comparison_entire_dataset():
 
 
 def plot_comparison_quantized_adam():
+
     data = pd.read_csv(f"{Path.home()}/datasets/DataSummary.csv")
     names = data["Name"]
     results = []
@@ -183,9 +188,9 @@ def plot_comparison_quantized_adam():
     plt.ylabel("Quantized Adam + Dynamic Tree")
     plt.plot([0, 1], [0, 1], 'k')
 
-    print(f"acc_improvement {np.mean(results[:, 0] - results[:, 1])}")
+    print(f"acc_improvement {np.mean(results[:, 1] - results[:, 2])}")
 
-    print(np.sum(results[:, 0] > results[:, 1]) / len(results[:, 1]))
+    print(np.sum(results[:, 1] > results[:, 2]) / len(results[:, 1]))
 
     # data = {"accRocket": results[:, 0]*100, "accNN": results[:, 1]*100, "distanceBoundary": distance_to_boundary}
     # df = pd.DataFrame(data)
@@ -205,8 +210,10 @@ def plot_comparison_quantized_adam():
 
 
 if __name__ == "__main__":
+
+
     plot_comparison_quantized_adam()
-    # plot_comparison_entire_dataset()
+    plot_comparison_entire_dataset()
     exit(0)
 
     data = pd.read_csv(f"{Path.home()}/datasets/DataSummary.csv")

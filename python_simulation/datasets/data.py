@@ -104,7 +104,7 @@ def quantize_8_bit(data, offset, scaling):
 
 
 class ClassificationDataset:
-    def __init__(self, params, seed):
+    def __init__(self, params, seed, sample_dataset_iid=False):
         print(f"Starting to load dataset {params['dataset_name']}...")
         self.params = params
 
@@ -196,7 +196,26 @@ class ClassificationDataset:
 
         self.num_features = len(X_train[0])
 
-        self.train_ds = PartDataset(X_train[:size_training], y_train[:size_training])
+        X_train_sorted = copy.deepcopy(X_train[:size_training])
+        y_train_sorted = copy.deepcopy(y_train[:size_training])
+
+        # Sort y_train and reorder X_train accordingly
+        sorted_indices = np.argsort(y_train_sorted)
+        y_train_sorted = y_train_sorted[sorted_indices]
+        X_train_sorted = X_train_sorted[sorted_indices]
+
+        X_train_rebatched = np.zeros(X_train_sorted.shape, dtype=np.float32)
+        y_train_rebatched = np.zeros(y_train_sorted.shape, dtype=np.int64)
+
+        num_devices = 10
+        num_data_per_device = int(np.ceil(len(X_train_sorted) / num_devices))
+        current_device = 0
+        for i in range(len(X_train_sorted)):
+            X_train_rebatched[i] = X_train_sorted[current_device*num_data_per_device + int(np.ceil(i / num_devices))]
+            y_train_rebatched[i] = y_train_sorted[current_device*num_data_per_device + int(np.ceil(i / num_devices))]
+            current_device = (current_device + 1) % num_devices
+
+        self.train_ds = PartDataset(X_train[:size_training], y_train[:size_training]) if sample_dataset_iid else PartDataset(X_train_rebatched, y_train_rebatched)
         self.eval_ds = PartDataset(X_train[size_training:, :], y_train[size_training:])
         self.test_ds = PartDataset(X_test[0:200], y_test[0:200])
 

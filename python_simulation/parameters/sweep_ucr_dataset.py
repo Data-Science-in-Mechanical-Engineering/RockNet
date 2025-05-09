@@ -24,22 +24,31 @@ if __name__ == "__main__":
 
         params_copy["dataset_name"] = n
         params_copy["show_print"] = False
-
-        # for use_rocket in [True]:   #, False]:
-        for quantize_adam in [False, True]:
-            params_copy["use_rocket"] = True
-            params_copy["quantize_adam"] = quantize_adam
-            params_copy["use_dynamictree_quantization"] = True
+        
+        params_copy["use_rocket"] = True
+        params_copy["quantize_adam"] = False
+        params_copy["use_dynamictree_quantization"] = True
+        for iid in [True, False]:
+            params_copy["sample_dataset_iid"] = iid
             with open(f"/work/mf724021/hpc_parameters/ROCKET/params{i}.yaml", 'w') as file:
                 yaml.dump(params_copy, file)
                 i += 1
+
+        # # for use_rocket in [True]:   #, False]:
+        # for quantize_adam in [False, True]:
+        #     params_copy["use_rocket"] = True
+        #     params_copy["quantize_adam"] = quantize_adam
+        #     params_copy["use_dynamictree_quantization"] = True
+        #     with open(f"/work/mf724021/hpc_parameters/ROCKET/params{i}.yaml", 'w') as file:
+        #         yaml.dump(params_copy, file)
+        #         i += 1
             
-        params_copy["use_rocket"] = True
-        params_copy["quantize_adam"] = True
-        params_copy["use_dynamictree_quantization"] = False
-        with open(f"/work/mf724021/hpc_parameters/ROCKET/params{i}.yaml", 'w') as file:
-            yaml.dump(params_copy, file)
-            i += 1
+        # params_copy["use_rocket"] = True
+        # params_copy["quantize_adam"] = True
+        # params_copy["use_dynamictree_quantization"] = False
+        # with open(f"/work/mf724021/hpc_parameters/ROCKET/params{i}.yaml", 'w') as file:
+        #     yaml.dump(params_copy, file)
+        #     i += 1
 
         """# cocob
         params_copy["use_cocob"] = True

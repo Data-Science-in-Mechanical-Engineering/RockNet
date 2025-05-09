@@ -23,3 +23,5 @@ use_cocob: False #True
 quantize_adam: True
 use_dynamictree_quantization: True
 
+sample_dataset_iid: True
+

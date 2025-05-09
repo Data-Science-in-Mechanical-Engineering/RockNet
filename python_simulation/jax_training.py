@@ -88,15 +88,24 @@ def get_logger_name(dataset_name,
                     eval_dataset,
                     quantize_adam,
                     use_dynamic_tree_quantization,
-                    learning_rate):
+                    learning_rate,
+                    sample_dataset_iid=False):
+    if use_rocket and quantize_adam:
+        app = "eval" if eval_dataset else "test"
+        app += f"{learning_rate}".replace(".", "_")
+        app += "" if use_rocket else "nn"
+        if quantize_adam:
+            app += "_qadam"
+            if use_dynamic_tree_quantization:
+                app += "_dyntree"
+        return f"{dataset_name}_{app}_{seed}.p"
+    
     app = "eval" if eval_dataset else "test"
-    app += f"{learning_rate}".replace(".", "_")
-    app += "" if use_rocket else "nn"
-    if quantize_adam:
-        app += "_qadam"
-        if use_dynamic_tree_quantization:
-            app += "_dyntree"
-    return f"{dataset_name}_{app}_{seed}.p"
+    app += f"_lr_{learning_rate}".replace(".", "_")
+    app += f"_{sample_dataset_iid}"
+    if not use_rocket:
+        return f"{dataset_name}_{seed}_{app}nn.p"
+    return f"{dataset_name}_{seed}_{app}.p"
 
 
 def get_dataloader(
@@ -121,11 +130,12 @@ class Trainer:
         self.__seed = seed
         np.random.seed(seed)
         torch.manual_seed(seed)
-        self.__classification_dataset = ClassificationDataset(self.__params, seed)
+        self.__classification_dataset = ClassificationDataset(self.__params, seed, 
+                                                                sample_dataset_iid=self.__params["sample_dataset_iid"])
 
         self.__train_dl = get_dataloader(self.__classification_dataset.train_ds,
                                          batch_size=self.__params["batch_size"],
-                                         num_workers=self.__params["dataloader_num_workers"])
+                                         num_workers=self.__params["dataloader_num_workers"],)
         self.__eval_dl = get_dataloader(self.__classification_dataset.eval_ds,
                                         batch_size=self.__params["batch_size_testing"],
                                         num_workers=self.__params["dataloader_num_workers"])
@@ -198,7 +208,8 @@ class Trainer:
                                             eval_dataset=True,
                                             quantize_adam=self.__params["quantize_adam"],
                                             use_dynamic_tree_quantization=self.__params["use_dynamictree_quantization"],
-                                            learning_rate=self.__params['learning_rate'])
+                                            learning_rate=self.__params['learning_rate'],
+                                            sample_dataset_iid=self.__params["sample_dataset_iid"])
                 with open(f"{self.__params['saving_path']}/{file_name}", 'wb') as handle:
                     p.dump(self.__evaluation_accuracies, handle, protocol=p.HIGHEST_PROTOCOL)
 
