@@ -197,7 +197,8 @@ class Trainer:
                                             eval_dataset=False,
                                             quantize_adam=self.__params["quantize_adam"],
                                             use_dynamic_tree_quantization=self.__params["use_dynamictree_quantization"],
-                                            learning_rate=self.__params['learning_rate'])
+                                            learning_rate=self.__params['learning_rate'],
+                                            sample_dataset_iid=self.__params["sample_dataset_iid"])
                 
                 with open(f"{self.__params['saving_path']}/{file_name}", 'wb') as handle:
                     p.dump(self.__test_accuracies, handle, protocol=p.HIGHEST_PROTOCOL)

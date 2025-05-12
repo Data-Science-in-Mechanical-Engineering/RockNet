@@ -25,19 +25,21 @@ def plot_data(file, color, label):
         print(f"File {file} not found {e}")
 
 
-def load_data(dataset_name, seed, use_rocket, eval_dataset, quantize_adam, use_dynamic_tree_quantization, learning_rate):
+def load_data(dataset_name, seed, use_rocket, eval_dataset, quantize_adam, use_dynamic_tree_quantization, sample_dataset_iid, learning_rate):
     file = get_logger_name(dataset_name=dataset_name, 
                             seed=seed, 
                             use_rocket=use_rocket,
                             eval_dataset=eval_dataset,
                             quantize_adam=quantize_adam,
                             use_dynamic_tree_quantization=use_dynamic_tree_quantization,
-                            learning_rate=learning_rate)
+                            learning_rate=learning_rate,
+                            sample_dataset_iid=sample_dataset_iid)
     print(f"Loading file {file}")
-    if use_rocket and quantize_adam:
-        file = f"../../jax_results/{file}"
-    else:
-        file = f"results/{file}" 
+    # if use_rocket and quantize_adam:
+    #     file = f"../../jax_results/{file}"
+    # else:
+    #     file = f"results/{file}" 
+    file = f"../../jax_results_iid/{file}"
     try:
         with open(file, 'rb') as handle:
             acc = p.load(handle)
@@ -47,7 +49,7 @@ def load_data(dataset_name, seed, use_rocket, eval_dataset, quantize_adam, use_d
         return None
 
 
-def get_final_accuracy(dataset_name, seed, use_rocket, quantize_adam, use_dynamic_tree_quantization, learning_rate):
+def get_final_accuracy(dataset_name, seed, use_rocket, quantize_adam, use_dynamic_tree_quantization, sample_dataset_iid, learning_rate):
 
     acc_evaluation = load_data(dataset_name=dataset_name,
                                 seed=seed,
@@ -55,14 +57,16 @@ def get_final_accuracy(dataset_name, seed, use_rocket, quantize_adam, use_dynami
                                 eval_dataset=True,
                                 quantize_adam=quantize_adam, 
                                 use_dynamic_tree_quantization=use_dynamic_tree_quantization, 
-                                learning_rate=learning_rate)
+                                learning_rate=learning_rate,
+                                sample_dataset_iid=sample_dataset_iid)
     acc_test = load_data(dataset_name=dataset_name,
                             seed=seed,
                             use_rocket=use_rocket,
                             eval_dataset=False,
                             quantize_adam=quantize_adam, 
                             use_dynamic_tree_quantization=use_dynamic_tree_quantization, 
-                            learning_rate=learning_rate)
+                            learning_rate=learning_rate,
+                            sample_dataset_iid=sample_dataset_iid)
 
     if acc_evaluation is None or acc_test is None:
         return False, None
@@ -84,8 +88,8 @@ def plot_comparison_entire_dataset():
     for n in names:
         for i in range(10):
             name_dataset_seed = f"{n}"
-            succ_rocket, acc_rocket = get_final_accuracy(name_dataset_seed, i, True, quantize_adam=True, use_dynamic_tree_quantization=True, learning_rate=0.001)
-            succ_nn, acc_nn = get_final_accuracy(name_dataset_seed, i, False, quantize_adam=False, use_dynamic_tree_quantization=False, learning_rate=0.001)
+            succ_rocket, acc_rocket = get_final_accuracy(name_dataset_seed, i, True, quantize_adam=False, use_dynamic_tree_quantization=True, learning_rate=0.001, sample_dataset_iid=True)
+            succ_nn, acc_nn = get_final_accuracy(name_dataset_seed, i, True, quantize_adam=False, use_dynamic_tree_quantization=False, learning_rate=0.001, sample_dataset_iid=True)
             if succ_nn and succ_rocket:
                 results.append([acc_rocket, acc_nn])
 
@@ -212,7 +216,7 @@ def plot_comparison_quantized_adam():
 if __name__ == "__main__":
 
 
-    plot_comparison_quantized_adam()
+    # plot_comparison_quantized_adam()
     plot_comparison_entire_dataset()
     exit(0)
 
