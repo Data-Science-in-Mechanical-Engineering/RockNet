@@ -62,7 +62,7 @@ def get_final_accuracy(dataset_name, seed, use_rocket, quantize_adam, use_dynami
     acc_test = load_data(dataset_name=dataset_name,
                             seed=seed,
                             use_rocket=use_rocket,
-                            eval_dataset=False,
+                            eval_dataset=True,
                             quantize_adam=quantize_adam, 
                             use_dynamic_tree_quantization=use_dynamic_tree_quantization, 
                             learning_rate=learning_rate,
