@@ -221,15 +221,6 @@ def run_batch(param_array):
 
 
 if __name__ == "__main__":
-    """max_params = 768
-    param_array = []
-    for i in range(max_params):
-        with open(f"{Path.home()}/hpc_parameters/ROCKET/params{i}.yaml", "r") as file:
-            param_array.append(yaml.safe_load(file))
-        parallel_simulation_wrapper(param_array[-1])
-        print(f"Finished params {i}")
-    exit()"""
-
     np.random.seed(1)
     parameter_path = "parameters/test.yaml"
     df = pd.read_csv(f"{Path.home()}/datasets/DataSummary.csv")

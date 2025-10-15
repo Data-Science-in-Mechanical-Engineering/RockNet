@@ -62,7 +62,7 @@ def get_final_accuracy(dataset_name, seed, use_rocket, quantize_adam, use_dynami
     acc_test = load_data(dataset_name=dataset_name,
                             seed=seed,
                             use_rocket=use_rocket,
-                            eval_dataset=True,
+                            eval_dataset=False,
                             quantize_adam=quantize_adam, 
                             use_dynamic_tree_quantization=use_dynamic_tree_quantization, 
                             learning_rate=learning_rate,
@@ -77,6 +77,7 @@ def get_final_accuracy(dataset_name, seed, use_rocket, quantize_adam, use_dynami
 def plot_comparison_entire_dataset():
     data = pd.read_csv(f"{Path.home()}/datasets/DataSummary.csv")
     names = data["Name"]
+    length = data["Train "]
     results = []
     distance_to_boundary = []
     boundary = np.array([1.0, 1.0])
@@ -85,10 +86,12 @@ def plot_comparison_entire_dataset():
     boundary_ort /= np.linalg.norm(boundary_ort)
 
 
-    for n in names:
+    for data_idx, n in enumerate(names):
+        if length[data_idx] < 100:
+            continue
         for i in range(10):
             name_dataset_seed = f"{n}"
-            succ_rocket, acc_rocket = get_final_accuracy(name_dataset_seed, i, True, quantize_adam=False, use_dynamic_tree_quantization=True, learning_rate=0.001, sample_dataset_iid=True)
+            succ_rocket, acc_rocket = get_final_accuracy(name_dataset_seed, i, True, quantize_adam=False, use_dynamic_tree_quantization=True, learning_rate=0.001, sample_dataset_iid=False)
             succ_nn, acc_nn = get_final_accuracy(name_dataset_seed, i, True, quantize_adam=False, use_dynamic_tree_quantization=False, learning_rate=0.001, sample_dataset_iid=True)
             if succ_nn and succ_rocket:
                 results.append([acc_rocket, acc_nn])
@@ -105,9 +108,9 @@ def plot_comparison_entire_dataset():
 
     print(np.sum(results[:, 0] > results[:, 1]) / len(results[:, 1]))
 
-    data = {"accRocket": results[:, 0]*100, "accNN": results[:, 1]*100, "distanceBoundary": distance_to_boundary}
+    data = {"accNonIID": results[:, 0]*100, "accIID": results[:, 1]*100, "distanceBoundary": distance_to_boundary}
     df = pd.DataFrame(data)
-    df.to_csv("results/plots/ComparisonNNROCKET.csv")
+    df.to_csv("results/plots/ComparisonIID.csv")
 
     plt.show()
 
@@ -116,7 +119,7 @@ def plot_comparison_entire_dataset():
 
     data = {"x": bin_edges[1:] - 0.5, "y": hist}
     df = pd.DataFrame(data)
-    df.to_csv("results/plots/ComparisonNNROCKETHist.csv")
+    df.to_csv("results/plots/ComparisonIIDHist.csv")
 
     plt.bar(bin_edges[1:] - 0.5, hist)
     plt.show()

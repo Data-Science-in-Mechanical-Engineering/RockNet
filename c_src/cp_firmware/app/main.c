@@ -168,7 +168,7 @@ static uint32_t			all_radio_on_time[MX_GENERATION_SIZE - 1]; // subtract control
 // ATTENTION: it is important to have TOS_NODE_ID in .data (not in .bss), otherwise tos-set-symbol
 // will not work
 uint16_t __attribute__((section(".data")))	TOS_NODE_ID = 0;
-#define THIS_NODE_ID 13
+#define THIS_NODE_ID 1
 
 //**************************************************************************************************
 //***** Global Functions ****************************************************************************
@@ -608,6 +608,7 @@ int main()
     }*/
 
     //train();
+    gpi_milli_sleep(1000);
     
     for (int i = 0; i < NUM_ELEMENTS(rocket_nodes); i++) {
       if (TOS_NODE_ID == rocket_nodes[i]) {
@@ -620,11 +621,19 @@ int main()
           gpi_milli_sleep(2000);
         }*/
         printf("Starting Rocket OS\r\n");
-        run_rocket_os(TOS_NODE_ID);
+		while(1)  {
+			run_rocket_os(TOS_NODE_ID);
+			gpi_milli_sleep(1000);
+		}
       }
     }
 
-    run_relay_os(TOS_NODE_ID);
+	while(1)  {
+    	run_relay_os(TOS_NODE_ID);
+		gpi_milli_sleep(1000);
+	}
+
+
     
     /*while (1)  {
       uint8_t *test[2];

@@ -28,7 +28,6 @@ def plot_ram():
 
 	plt.xlabel("Number devices")
 	plt.ylabel("RAM usage (kB)")
-	plt.savefig('C:\\Users\\mf724021\\Downloads\\RAMUsage.png', bbox_inches='tight')
 	plt.show()
 
 
@@ -87,6 +86,10 @@ def energy_till_accuracy(name, num_nodes, accuracy):
 		l = l.replace("us", "")
 		data = l.split(":")
 		header = data[0]
+		
+		if header == "com_time":
+			com_time.append(int(data[1][0:-2]))
+		
 		if header in log_data:
 			log_data[header].append(int(data[1]))
 
@@ -120,7 +123,7 @@ def energy_till_accuracy(name, num_nodes, accuracy):
 			if power_rx is not None:
 				start_calculations = True
 
-	return np.sum(energy_consumed_communication) + np.sum(energy_consumed_computation)
+	return np.sum(energy_consumed_communication) + np.sum(energy_consumed_computation), max(calc_times), max(com_time)
 
 def analyze_logs(name, num_nodes):
 	with open(f"../Log{name}{num_nodes}.txt", 'r') as f:
@@ -216,7 +219,7 @@ def print_table(data, num_nodes_start, num_nodes_end, error_plus=None, error_min
 
 
 if __name__ == "__main__":
-	name = "OSULeaf"# "FaceAll"  #"OSULeaf"#"ElectricDevices"
+	name = "FaceAll"# "FaceAll"  #"OSULeaf"#"ElectricDevices"
 	comps = []
 	comps_errors_plus = []
 	comps_errors_minus = []
@@ -225,8 +228,8 @@ if __name__ == "__main__":
 	coms_errors_minus = []
 	calc_times = []
 	com_times = []
-	num_nodes_start = 5
-	for i in range(num_nodes_start, 20, 2):
+	num_nodes_start = 7
+	for i in range(num_nodes_start, 21, 2):
 		comp, comp_em, comp_ep, com, com_em, com_ep, calc_time, com_time = analyze_logs(name, i)
 		comps.append(comp)
 		comps_errors_plus.append(comp_ep)
@@ -245,6 +248,11 @@ if __name__ == "__main__":
 	print("-------")
 	print_table(com_times, num_nodes_start, 19)
 	print("-------")
+	print((com_times[-1] + calc_times[-1]) / (calc_times[0] * num_nodes_start))
+	print((coms[-1] + coms[-1]) / (comps[0] * num_nodes_start))
+	print("-------")
+
+	exit(0)
 
 	#analyze_logs("OSULeaf", 20)
 	#exit(0)
@@ -257,16 +265,16 @@ if __name__ == "__main__":
 		print(f"max AIFES: {max_acc_aifes_time}h: {max_acc_aifes}%")
 		print(f"max ROCKNET: {max_acc_rocknet_time}h ({max_acc_rocknet_time / max_acc_aifes_time}): {max_acc_rocknet}% ({max_acc_rocknet / max_acc_aifes})")
 
-		latency_rocknet_till_aifes = time_till_acc(name, 20, max_acc_aifes)
+		latency_rocknet_till_aifes, max_latency_comp, max_latency_comm  = time_till_acc(name, 20, max_acc_aifes)
 		print(f"Latency ROCKNET till max aifes: {latency_rocknet_till_aifes} h ({latency_rocknet_till_aifes / max_acc_aifes_time}) ")
 
 		print("Energy consumption")
-		energy_aifes = max_acc_aifes_time * 3600*power_calculation
+		energy_aifes = max_acc_aifes_time * 3600 * power_calculation
 		print(f"Energy AIFES max: {energy_aifes}J")
 		energy = energy_till_accuracy(name, 20, max_acc_rocknet)
 		print(f"Energy ROCKNET max: {energy} J ({energy / energy_aifes})")
 		energy = energy_till_accuracy(name, 20, max_acc_aifes)
-		print(f"Energy ROCKNET till AIfES max: {energy} J ({energy / energy_aifes})")
+		print(f"Energy ROCKNET till AIfES max: {energy} J ({energy / energy_aifes})")#
 		print(f"===============================================")
 
 	parse_csv("OSULeaf", 20)

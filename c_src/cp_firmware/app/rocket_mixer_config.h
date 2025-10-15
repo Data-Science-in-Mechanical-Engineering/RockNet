@@ -16,34 +16,34 @@ static const uint8_t nodes[] = {  1,  2,  3,  4,  5,  6,  7,  8,  9,  10,  11,  
 static const uint8_t rocket_nodes[] = {  1,  2,  3,  4,  5,  6,  7,  8,  9,  10,  11,  12,  13,  14,  15,  16,  17,  18,  19,  20, };
 
 static message_assignment_t message_assignment[] = {
- {.id=254, .size=431},
- {.id=1, .size=26},
- {.id=2, .size=26},
- {.id=3, .size=26},
- {.id=4, .size=26},
- {.id=5, .size=26},
- {.id=6, .size=26},
- {.id=7, .size=26},
- {.id=8, .size=26},
- {.id=9, .size=26},
- {.id=10, .size=26},
- {.id=11, .size=26},
- {.id=12, .size=26},
- {.id=13, .size=26},
- {.id=14, .size=26},
- {.id=15, .size=26},
- {.id=16, .size=26},
- {.id=17, .size=26},
- {.id=18, .size=26},
- {.id=19, .size=26},
- {.id=20, .size=26},
+ {.id=254, .size=135},
+ {.id=1, .size=58},
+ {.id=2, .size=58},
+ {.id=3, .size=58},
+ {.id=4, .size=58},
+ {.id=5, .size=58},
+ {.id=6, .size=58},
+ {.id=7, .size=58},
+ {.id=8, .size=58},
+ {.id=9, .size=58},
+ {.id=10, .size=58},
+ {.id=11, .size=58},
+ {.id=12, .size=58},
+ {.id=13, .size=58},
+ {.id=14, .size=58},
+ {.id=15, .size=58},
+ {.id=16, .size=58},
+ {.id=17, .size=58},
+ {.id=18, .size=58},
+ {.id=19, .size=58},
+ {.id=20, .size=58},
  };
 
 #define MX_PAYLOAD_SIZE 100
 #define MX_ROUND_LENGTH 150
-#define MX_SLOT_LENGTH GPI_TICK_US_TO_HYBRID2(689)
-#define ROUND_LENGTH_MS            ((MX_ROUND_LENGTH*MX_SLOT_LENGTH / (GPI_HYBRID_CLOCK_RATE / 1000000)) / 1000 + 160)
-#define MX_GENERATION_SIZE 26
+#define MX_SLOT_LENGTH GPI_TICK_US_TO_HYBRID2(681)
+#define ROUND_LENGTH_MS            ((MX_ROUND_LENGTH*MX_SLOT_LENGTH / (GPI_HYBRID_CLOCK_RATE / 1000000)) / 1000 + 500)
+#define MX_GENERATION_SIZE 23
 
 #define AGGREGATE_FLAGS_SIZE (0)
 #define AGGREGATE_CONTENT_SIZE (0)

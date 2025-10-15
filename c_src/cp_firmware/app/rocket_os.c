@@ -79,11 +79,11 @@ static uint8_t communication_finished_callback(ap_message_t *data, uint16_t size
       training_state = TRAINING;
     }
   }
-  printf("time: %lu, ", round_nmbr);
-  printf(":%lu, ", current_training_ts_idx);
-  printf(":%lu\r\n", current_evaluation_ts_idx);
+  //printf("time: %lu, ", round_nmbr);
+  //printf(":%lu, ", current_training_ts_idx);
+  //printf(":%lu\r\n", current_evaluation_ts_idx);
 
-  printf("rx_time_series_last_round: %u\n", rx_time_series_last_round);
+  //printf("rx_time_series_last_round: %u\n", rx_time_series_last_round);
 
   uint8_t updated_gradients = 0;
   
@@ -96,7 +96,7 @@ static uint8_t communication_finished_callback(ap_message_t *data, uint16_t size
             batch_time = 0;
             update_weights();
             updated_gradients = 1;
-            printf("Gradient update\r\n");
+            //printf("Gradient update\r\n");
           }
         }
 
@@ -111,7 +111,7 @@ static uint8_t communication_finished_callback(ap_message_t *data, uint16_t size
           training_state = EVALUATION;
           if (!updated_gradients) {
             update_weights();
-            printf("Gradient update\r\n");
+            //printf("Gradient update\r\n");
           }
         }
         current_training_ts_idx++;
@@ -211,7 +211,7 @@ static uint16_t communication_starts_callback(ap_message_t **data)
       break;
     case EVALUATION:
       {
-        // 1 round before siwtching to the training, we already need to send training timeseries, as we have a delay.
+        // 1 round before switching to the training, we already need to send training timeseries, as we have a delay.
         if (current_evaluation_ts_idx <  NUM_EVALUATION_TIMESERIES) {
           if (current_evaluation_ts_idx < evaluation_data_starting_time || current_evaluation_ts_idx >= evaluation_data_ending_time) {
             return 1;
@@ -236,7 +236,7 @@ static uint16_t communication_starts_callback(ap_message_t **data)
     data[1]->time_series_message.data[j] = ts[j];
   }
   data[1]->time_series_message.label = label;
-  printf("sending timeseries\n");
+  // printf("sending timeseries\n");
   return 2;
 }
 
@@ -279,6 +279,14 @@ void run_rocket_os(uint8_t id)
   printf("sdfasdfasdfasdfasdfasdf\n");
 
   training_state = IDLE;
+  round_nmbr = -1lu;
+  rx_time_series_last_round = 0;
+  batch_time = 0;
+  evaluation_accuracy = 0;
+  num_summands_evaluation_accuracy = 0;
+
+  current_training_ts_idx = 0;
+  current_evaluation_ts_idx = 0;
 
   message.header.id = id;
   message.header.type = TYPE_CLASSIFICATION;

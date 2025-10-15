@@ -289,12 +289,17 @@ void update_weights()
 
 void init_linear_classifier(uint8_t id)
 {
-
-  
+  t = 1;
   rocket_node_idx = get_rocket_node_idx(id);
 
   for (uint32_t i = 0; i < NUM_CLASSES*devices_num_features[rocket_node_idx]; i++) {
     weight[i] = 2 * random_numbers[i%1000] / sqrtf(NUM_FEATURES + NUM_CLASSES);
+    d_weight[i] = 0;
+  }
+
+  for (uint32_t i = 0; i < NUM_CLASSES; i++) {
+    bias[i] = 0;
+    d_bias[i] = 0;
   }
 
   #if USE_QADAM
@@ -318,5 +323,15 @@ void init_linear_classifier(uint8_t id)
     v_t_bias[i] = 120;
   }
 
+  #else
+    for (uint32_t i = 0; i < NUM_CLASSES * MAX_FEATURES_PER_DEVICE; i++) {
+    m_t_weight[i] = 0;
+    v_t_weight[i] = 0;
+  }
+  
+  for (uint32_t i = 0; i < NUM_CLASSES; i++) {
+    m_t_bias[i] = 0;
+    v_t_bias[i] = 0;
+  }
   #endif
 }

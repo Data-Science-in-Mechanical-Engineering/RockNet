@@ -100,7 +100,7 @@ def generate_timing_configuration(message_size_list, num_devices, num_classes, a
 	num_messages_best = num_messages[best_ind]
 
 	slot_length = round(slot_time) + 10  # plus 10 to have a bit of security gap
-	calculation_duration = 300  #int(340 * num_classes / num_devices) + 20
+	calculation_duration = 500  #int(340 * num_classes / num_devices) + 20
 
 	return mixer_size, num_rounds, slot_length, calculation_duration, num_messages_best
 
@@ -216,7 +216,7 @@ def quantize_8_bit(data, offset, scaling):
 	return np.clip((data - offset) / scaling * 127, a_min=-127, a_max=127)
 
 
-def generate_code(dataset_training, dataset_evaluation, kernels, dilations, num_biases_per_kernel, quantiles, num_nodes, quantize):
+def generate_code(dataset_training, dataset_evaluation, kernels, dilations, num_biases_per_kernel, quantiles, num_nodes, quantize, num_classes):
 	jinja_environment = Environment(loader=FileSystemLoader('c_src/jinja_templates'))
 	template_rocket_config_h = jinja_environment.get_template('rocket_config_distributed.h.jinja')
 	template_rocket_config_c = jinja_environment.get_template('rocket_config_distributed.c.jinja')
@@ -232,8 +232,6 @@ def generate_code(dataset_training, dataset_evaluation, kernels, dilations, num_
 	num_kernels_per_device, kernel_idx = split_kernels(num_nodes, len(kernels))
 
 	devices_num_features = np.array([len(dilations) * num_biases_per_kernel * n for n in num_kernels_per_device])
-
-	num_classes = int(round(max(dataset_training[1])))
 
 	template_values = {
 		'time_series_type_t': "int8_t" if quantize else "float",
@@ -319,7 +317,7 @@ def generate_data(len_timeseries, quantize):
 		max_int = 2 ** 7 - 1
 		scale = max_int / np.max(np.abs(data))
 		data = np.clip(data * scale, a_min=-max_int, a_max=max_int)
-		print(np.max(data))
+		# print(np.max(data))
 
 	label = label[shuffle_vec]
 	return data, label
@@ -351,13 +349,14 @@ def load_ucr_dataset(name, test=False):
 def generate_data_ucr(num_trajectories, name_dataset, test, frac=1):
 	X_train, y_train = load_ucr_dataset(name_dataset, test)
 	num_trajectories = min(num_trajectories, int(round(len(X_train) * frac)))
+	num_classes = len(np.unique(y_train))
 
 	return (np.array(X_train[0:num_trajectories], dtype=np.float32),
-			np.array(y_train[0:num_trajectories], dtype=np.int64))
+			np.array(y_train[0:num_trajectories], dtype=np.int64), num_classes)
 
 
 def calculate_RAM(dilations, num_biases_per_kernel, kernels, num_classes, multiplier=1, offset=None):
-	for num_nodes in range(1, 21, 2):
+	for num_nodes in [i for i in range(1, 21, 2)] + [20]:
 		num_kernels_per_device, kernel_idx = split_kernels(num_nodes, len(kernels))
 		devices_num_features = np.array([len(dilations) * num_biases_per_kernel * n for n in num_kernels_per_device])
 		memory = max(devices_num_features) / 1000 * 4 * multiplier * num_classes
@@ -369,17 +368,16 @@ def calculate_RAM(dilations, num_biases_per_kernel, kernels, num_classes, multip
 
 if __name__ == "__main__":
 	# len_timeseries =  101
-	num_nodes = 20
+	num_nodes = int(input("Number of nodes: "))
 	quantize = True
 
 	# data, labels = generate_data(len_timeseries, quantize)
 	np.random.seed(1)
-	data_training, labels_training = generate_data_ucr(num_trajectories=8500, name_dataset="OSULeaf", test=False)
-	data_test, labels_test = generate_data_ucr(num_trajectories=242, name_dataset="OSULeaf", test=True)
-	# data_test, labels_test = generate_data_ucr(num_trajectories=242, name_dataset="OSULeaf", test=True)
+	# data_training, labels_training, num_classes = generate_data_ucr(num_trajectories=8500, name_dataset="OSULeaf", test=False)
+	# data_test, labels_test, _ = generate_data_ucr(num_trajectories=242, name_dataset="OSULeaf", test=True)
 
-	"""data_training, labels_training = generate_data_ucr(num_trajectories=2200, name_dataset="ElectricDevices", test=False)
-	data_test, labels_test = generate_data_ucr(num_trajectories=200, name_dataset="ElectricDevices", test=True)"""
+	# data_training, labels_training, num_classes = generate_data_ucr(num_trajectories=2200, name_dataset="ElectricDevices", test=False)
+	# data_test, labels_test, _ = generate_data_ucr(num_trajectories=200, name_dataset="ElectricDevices", test=True)
 
 	"""data_training, labels_training = generate_data_ucr(num_trajectories=2200, name_dataset="MelbournePedestrian",
 													   test=False)
@@ -389,12 +387,12 @@ if __name__ == "__main__":
 													   test=False)
 	data_test, labels_test = generate_data_ucr(num_trajectories=200, name_dataset="CricketX", test=True)"""
 
-	"""data_training, labels_training = generate_data_ucr(num_trajectories=10, name_dataset="OSULeaf", test=False)
-	data_test, labels_test = generate_data_ucr(num_trajectories=10, name_dataset="OSULeaf", test=True)"""
+	# data_training, labels_training, num_classes = generate_data_ucr(num_trajectories=10, name_dataset="ElectricDevices", test=False)
+	# data_test, labels_test, _ = generate_data_ucr(num_trajectories=10, name_dataset="ElectricDevices", test=True)
 
-	"""data_training, labels_training = generate_data_ucr(num_trajectories=8500, name_dataset="FaceAll",
-													   test=False, frac=0.8)
-	data_test, labels_test = generate_data_ucr(num_trajectories=200, name_dataset="FaceAll", test=True)"""
+	data_training, labels_training, num_classes = generate_data_ucr(num_trajectories=8500, name_dataset="FaceAll",
+													   test=False)
+	data_test, labels_test, _ = generate_data_ucr(num_trajectories=200, name_dataset="FaceAll", test=True)
 
 	len_timeseries = len(data_training[0])
 
@@ -405,46 +403,54 @@ if __name__ == "__main__":
 
 	num_features = len(dilations) * len(kernels) * num_biases_per_kernel
 
-	num_classes = int(round(max(labels_training)))
-
 	calculate_RAM(dilations, num_biases_per_kernel, kernels, num_classes, multiplier=1)
 
 	print("----------")
 
-	calculate_RAM(dilations, num_biases_per_kernel, kernels, num_classes, multiplier=3)  # ADAM + d_weight
+	calculate_RAM(dilations, num_biases_per_kernel, kernels, num_classes, multiplier=1.5)  # ADAM + d_weight
 
 	print("-------------")
 
-	offsets = {1: 0, 3: 0, 5: 244.8, 6: 204.1, 7: 177.1, 8: 163.6, 9: 150.1, 10: 136.7, 11: 123.2, 12: 109.7, 13: 109.8, 14: 96.4, 15: 96.5,
-			   16: 96.6, 17: 83.2, 18: 83.3, 19: 83.4, 20: 83.5}  # ElectricDevices
+	# offsets = {1: 0, 3: 0, 5: 244.8, 6: 204.1, 7: 177.1, 8: 163.6, 9: 150.1, 10: 136.7, 11: 123.2, 12: 109.7, 13: 109.8, 14: 96.4, 15: 96.5,
+	# 		   16: 96.6, 17: 83.2, 18: 83.3, 19: 83.4, 20: 83.5}  # ElectricDevices
+	
+	offsets = {1: 0, 3: 0, 5: 167.3, 7: 123.3, 9: 105.8, 11: 88.3, 13: 79.7, 15: 71.1,
+			   17: 62.5, 19: 62.7, 20: 62.9}  # ElectricDevices quant
 
 	#offsets = {1: 0, 3: 0, 5: 209.1, 7: 151.4, 9: 128.5, 11: 105.6, 13: 94.3,
 	#		   15: 83.0, 17: 71.6, 19: 71.9}  # OSULeaf
 
+	offsets = {1: 0, 3: 0, 5: 144.3, 7: 106.6, 9: 91.7, 11: 76.7, 13: 69.4,
+			   15: 62.1, 17: 54.7, 19: 55.0, 20: 55.1}  # OSULeaf quant
+
 	#offsets = {1: 0, 3: 0, 5: 209.1, 7: 241.2, 9: 202.7, 11: 164.2, 13: 145.1,
 			   #15: 126.0, 17: 106.9, 19: 107.1}  # Melbourne Pedestrian
 
-	offsets = {1: 0, 3: 0, 5: 209.1, 7: 151.4, 9: 233.8, 11: 189.5, 13: 167.5,
-			   15: 145.5, 17: 123.5, 19: 123.7}  # CricketX
+	# offsets = {1: 0, 3: 0, 5: 209.1, 7: 151.4, 9: 233.8, 11: 189.5, 13: 167.5,
+	# 		   15: 145.5, 17: 123.5, 19: 123.7}  # CricketX
 
-	offsets = {1: 0, 3: 0, 5: 209.1, 7: 151.4, 9: 248.3, 11: 200.1, 13: 176.1,
-			   15: 152.1, 17: 128.0, 19: 128.3}  # FaceAll
+	# offsets = {1: 0, 3: 0, 5: 209.1, 7: 151.4, 9: 248.3, 11: 200.1, 13: 176.1,
+	# 		   15: 152.1, 17: 128.0, 19: 128.3}  # FaceAll
 
-	calculate_RAM(dilations, num_biases_per_kernel, kernels, num_classes, multiplier=4, offset=offsets)
-	print(num_classes)
-	print(".......")
+	# offsets = {1: 0, 3: 0, 5: 0, 7: 211.4, 9: 178.3, 11: 145.2, 13: 128.8,
+	#  		   15: 112.4, 17: 96.0, 19: 96.2, 20: 96.3}  # FaceAll quant  140.2
+
+	calculate_RAM(dilations, num_biases_per_kernel, kernels, num_classes, multiplier=2.5, offset=offsets)
+	# print(num_classes)
+	# print(".......")
 	#exit(0)
 
 	generate_code([data_training, labels_training], [data_test, labels_test], kernels, dilations, num_biases_per_kernel,
 				  quantiles(len(dilations) * len(kernels) * num_biases_per_kernel),
 				  num_nodes=num_nodes,
-				  quantize=quantize)
+				  quantize=quantize, 
+				  num_classes=num_classes)
 
 	kernel_bins = generate_kernels()
 
-	print(len(kernel_bins))
-	for e in kernel_bins:
-		# print(f"{e:09b}")
-		print(f"{e}")
+	# print(len(kernel_bins))
+	# for e in kernel_bins:
+	# 	# print(f"{e:09b}")
+	# 	print(f"{e}")
 
-	print(generate_matrix_code(np.random.randn(1000), use_float=True))
+	# print(generate_matrix_code(np.random.randn(1000), use_float=True))

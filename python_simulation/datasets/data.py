@@ -215,7 +215,7 @@ class ClassificationDataset:
             y_train_rebatched[i] = y_train_sorted[current_device*num_data_per_device + int(np.ceil(i / num_devices))]
             current_device = (current_device + 1) % num_devices
 
-        if sample_dataset_iid:
+        if not sample_dataset_iid:
             self.train_ds = PartDataset(X_train_rebatched, y_train_rebatched)
         else:
             self.train_ds = PartDataset(X_train[:size_training], y_train[:size_training]) if sample_dataset_iid else PartDataset(X_train_rebatched, y_train_rebatched)

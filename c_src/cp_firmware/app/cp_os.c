@@ -25,6 +25,8 @@ static uint16_t (*communication_starts_callback)(ap_message_t**);
 
 static ap_message_t dummy_message;
 
+static uint16_t initiator_message_not_received_counter = 0;
+
 void init_cp_os(uint8_t (*communication_finished_callback_p)(ap_message_t*, uint16_t), 
                 uint16_t (*communication_starts_callback_p)(ap_message_t**),
                 uint8_t id)
@@ -44,6 +46,8 @@ void init_cp_os(uint8_t (*communication_finished_callback_p)(ap_message_t*, uint
 
 void run()
 {
+  initiator_message_not_received_counter = 0;
+  
   ap_message_t ap_pkt;
   message_layer_init();
   printf("Messagelayer init\r\n");
@@ -175,11 +179,19 @@ void run_rounds(uint8_t (*communication_finished_callback)(ap_message_t*, uint16
     init_message_t init_message;
     uint8_t succ = read_message_from_mixer(0, (uint8_t *) &init_message, sizeof(init_message_t));
     if (succ) {
+      initiator_message_not_received_counter = 0;
       if (1 == round_nr) {
         round_nr = init_message.round;
       // resynchronize when round number does not match
       } else if (init_message.round != round_nr) {
         round_nr = 0;	// increments to 1 with next round loop iteration
+        return;
+      }
+    } else {
+      initiator_message_not_received_counter++;
+      if (initiator_message_not_received_counter > 10) {
+        round_nr = 0;
+        return;
       }
     }
 
